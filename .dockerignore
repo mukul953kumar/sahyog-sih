@@ -1,0 +1,12 @@
+node_modules
+dist
+.git
+.gitignore
+.agents
+.gemini
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+Dockerfile
+.dockerignore
+DOCKER_INSTRUCTIONS.md

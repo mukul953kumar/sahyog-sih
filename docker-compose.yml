@@ -1,0 +1,7 @@
+services:
+  sahyog-app:
+    image: mukul2026k/sahyog-app:latest
+    container_name: sahyog-platform
+    restart: unless-stopped
+    ports:
+      - "80:80"

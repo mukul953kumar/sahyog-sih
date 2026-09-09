@@ -1,0 +1,597 @@
+import React, { createContext, useContext, useState, useEffect } from 'react';
+import {
+  WORKERS,
+  CATEGORIES,
+  INITIAL_BOOKINGS,
+  INITIAL_NEGOTIATION_THREAD,
+  COOPERATIVE_INFO,
+  RESOLUTIONS,
+  SUPPORTED_CITIES,
+} from '../data/hardcodedData';
+import { TRANSLATIONS } from '../i18n/translations';
+
+const AppContext = createContext();
+
+export const AppProvider = ({ children }) => {
+  // Language & Translation
+  const [language, setLanguageState] = useState(() => {
+    return localStorage.getItem('sahyog_language') || 'en';
+  });
+
+  const setLanguage = (lang) => {
+    setLanguageState(lang);
+    localStorage.setItem('sahyog_language', lang);
+  };
+
+  const t = (key) => {
+    const dict = TRANSLATIONS[language] || TRANSLATIONS.en;
+    return dict[key] || TRANSLATIONS.en[key] || key;
+  };
+
+  // Location State (Default to Sultanpur as requested: "abhi main sultanpur me hu")
+  const [selectedCity, setSelectedCity] = useState(() => {
+    return localStorage.getItem('sahyog_city') || 'sultanpur';
+  });
+
+  const [selectedLocality, setSelectedLocality] = useState(() => {
+    return localStorage.getItem('sahyog_locality') || 'Civil Lines, Golaghat';
+  });
+
+  const [locationModalOpen, setLocationModalOpen] = useState(false);
+
+  const activeCityConfig =
+    SUPPORTED_CITIES.find((c) => c.id === selectedCity) || SUPPORTED_CITIES[0];
+
+  const updateLocation = (cityId, localityName) => {
+    setSelectedCity(cityId);
+    setSelectedLocality(localityName);
+    localStorage.setItem('sahyog_city', cityId);
+    localStorage.setItem('sahyog_locality', localityName);
+
+    // Switch active default worker to the first available in this city
+    const cityWorkers = WORKERS.filter(
+      (w) => w.city && w.city.toLowerCase() === cityId.toLowerCase()
+    );
+    if (cityWorkers.length > 0) {
+      setSelectedWorkerId(cityWorkers[0].id);
+    }
+  };
+
+  const dynamicCooperativeInfo = {
+    ...COOPERATIVE_INFO,
+    fullName: `SAHYOG ${activeCityConfig.name} Cooperative Services`,
+    regNumber: activeCityConfig.regNumber,
+    area: selectedLocality || activeCityConfig.defaultLocality,
+    ward: activeCityConfig.ward,
+    city: activeCityConfig.name,
+    chapter: activeCityConfig.chapter,
+  };
+
+  // Navigation state (Default worker is Awadhesh Sharma for Sultanpur)
+  const [currentView, setCurrentView] = useState('home');
+  const [selectedWorkerId, setSelectedWorkerId] = useState('awadhesh-sharma-sln');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('distance'); // 'distance' | 'rating' | 'jobs'
+
+  // User Authentication & Role: 'customer' | 'worker' | 'admin'
+  const [userRole, setUserRole] = useState(() => {
+    return localStorage.getItem('sahyog_role') || 'customer';
+  });
+
+  const [currentUser, setCurrentUser] = useState(() => {
+    const saved = localStorage.getItem('sahyog_user');
+    return saved
+      ? JSON.parse(saved)
+      : {
+          name: 'Priya Sharma',
+          phone: '98765 43210',
+          role: 'customer',
+          locality: 'Civil Lines, Sultanpur',
+          avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAe-bmDk-p9IcNdQl6BkQrbmVmPBPTNgu01w2_iO_U1pK2hrq7IEiWyxgOBzgbhnlrXQHAZgeDP-jBJUf8tlZdKmx0_SZMmuMCvDguPHCMheSQdcWvSDDJZSGnJISSC6iCbfU9YWWnni8sz0NcCHUYzMftcRkW8ZCHU0xJXCEU1Y1gfXRtGw1eSQpfBNhrUY_fXf2mkzk6sAatdarPxMwgKHkT8zF4v7GccQTCEny4qkelRazmb6IzG',
+        };
+  });
+
+  // Switch Role helper that updates context and navigates
+  const switchRole = (newRole) => {
+    setUserRole(newRole);
+    localStorage.setItem('sahyog_role', newRole);
+    if (newRole === 'worker') {
+      setCurrentView('worker-dashboard');
+    } else if (newRole === 'admin') {
+      setCurrentView('admin-dashboard');
+    } else {
+      setCurrentView('home');
+    }
+  };
+
+  // Bookings list (with localStorage fallback)
+  const [bookings, setBookings] = useState(() => {
+    const saved = localStorage.getItem('sahyog_bookings');
+    return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+  });
+
+  // Active negotiation thread
+  const [negotiationThread, setNegotiationThread] = useState(() => {
+    const saved = localStorage.getItem('sahyog_negotiation');
+    return saved ? JSON.parse(saved) : INITIAL_NEGOTIATION_THREAD;
+  });
+
+  // Current agreed price for active checkout
+  const [agreedLabourPrice, setAgreedLabourPrice] = useState(450);
+
+  // Modals & Dialogs
+  const [emergencyModalOpen, setEmergencyModalOpen] = useState(false);
+  const [successBookingModal, setSuccessBookingModal] = useState(null);
+  const [roleModalOpen, setRoleModalOpen] = useState(false);
+  const [eShramWorkerModal, setEShramWorkerModal] = useState(null);
+  const [digiLockerWorkerModal, setDigiLockerWorkerModal] = useState(null);
+  const [voiceSearchModalOpen, setVoiceSearchModalOpen] = useState(false);
+  const [disputeModalBooking, setDisputeModalBooking] = useState(null);
+  const [auditReportModalOpen, setAuditReportModalOpen] = useState(false);
+  const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
+  const [skillAssessmentModalWorker, setSkillAssessmentModalWorker] = useState(null);
+
+  // --- WORKER DASHBOARD STATE ---
+  const [workerOnDuty, setWorkerOnDuty] = useState(true);
+  const [workerEarnings, setWorkerEarnings] = useState({
+    today: 1350,
+    week: 8400,
+    dividend: 1200,
+    commissionCut: 0,
+    jobsToday: 3,
+  });
+
+  const [incomingJobs, setIncomingJobs] = useState([
+    {
+      id: 'DISPATCH-409',
+      customerName: 'Ananya Rao',
+      address: 'Plot 45, 100ft Road, Indiranagar',
+      trade: 'Electrical MCB Trip & Sparks',
+      distance: '0.8 km',
+      quote: 450,
+      eta: '12 mins',
+      status: 'pending',
+    },
+    {
+      id: 'DISPATCH-412',
+      customerName: 'Karthik Raja',
+      address: 'Flat 104, Sunrise Heights, Domlur',
+      trade: 'Ceiling Fan Replacement',
+      distance: '1.4 km',
+      quote: 300,
+      eta: '25 mins',
+      status: 'pending',
+    },
+  ]);
+
+  // Worker claims 4-digit PIN to release payment
+  const claimEscrowWithPin = (pinCode) => {
+    const matchingBooking = bookings.find(
+      (b) => b.releaseOtp === pinCode && b.status === 'escrow_locked'
+    );
+
+    if (matchingBooking) {
+      setBookings((prev) =>
+        prev.map((b) => {
+          if (b.id === matchingBooking.id) {
+            return {
+              ...b,
+              status: 'released',
+              timeline: b.timeline.map((step) => ({ ...step, status: 'completed' })),
+            };
+          }
+          return b;
+        })
+      );
+
+      setWorkerEarnings((prev) => ({
+        ...prev,
+        today: prev.today + matchingBooking.labourAmount,
+        week: prev.week + matchingBooking.labourAmount,
+        jobsToday: prev.jobsToday + 1,
+      }));
+
+      return {
+        success: true,
+        message: `PIN Verified! ₹${matchingBooking.labourAmount} directly transferred to your Canara Bank account (100% direct, ₹0 commission).`,
+      };
+    } else {
+      return {
+        success: false,
+        message: 'Invalid or already released PIN. Please ask customer to check their booking screen.',
+      };
+    }
+  };
+
+  const acceptIncomingJob = (jobId) => {
+    setIncomingJobs((prev) =>
+      prev.map((j) => (j.id === jobId ? { ...j, status: 'accepted' } : j))
+    );
+  };
+
+  const declineIncomingJob = (jobId) => {
+    setIncomingJobs((prev) => prev.filter((j) => j.id !== jobId));
+  };
+
+  // --- DISPUTE & 100% REFUND FLOW ---
+  const raiseDispute = (bookingId, reason) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          return {
+            ...b,
+            status: 'disputed',
+            disputeReason: reason,
+            disputeDate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          };
+        }
+        return b;
+      })
+    );
+  };
+
+  const adminResolveDispute = (bookingId, resolutionType) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          return {
+            ...b,
+            status: resolutionType === 'refund_customer' ? 'refunded' : 'released',
+            disputeResolution: resolutionType,
+          };
+        }
+        return b;
+      })
+    );
+  };
+
+  // --- ADMIN DASHBOARD STATE (KYC QUEUE WITH SKILL ASSESSMENT) ---
+  const [kycQueue, setKycQueue] = useState([
+    {
+      id: 'KYC-901',
+      name: 'Suresh Nanjappa',
+      trade: 'Wireman & Circuit Specialist',
+      experience: '4 Yrs',
+      verificationMethod: 'skill_assessment',
+      eShramId: 'Not Available (Applied via Practical Demo)',
+      digiLockerStatus: 'Non-Formal Tradesman (Grassroots)',
+      policeCheck: 'Clear (HAL Station)',
+      date: 'Today, 11:20 AM',
+      status: 'pending',
+      skillAssessment: {
+        status: 'pending_review',
+        practicalScore: '96/100',
+        grade: 'Grade A (Master Wireman Review)',
+        demoVideo: {
+          title: 'Live 3-Phase MCB Wiring & Multi-meter Earthing Test',
+          duration: '2:10 mins',
+          recordedAt: 'Ward 112 Co-op Training Bench',
+          thumbnail: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&auto=format&fit=crop&q=80',
+          description: 'Suresh demonstrates safe troubleshooting of an industrial distribution board, testing earth pit resistance < 4 ohms with insulated gloves.',
+          checklist: [
+            'Live safety circuit isolation (Passed)',
+            'Insulated tools protocol (Passed)',
+            'Load test & voltage drop check (Passed)',
+          ],
+        },
+        workshopProof: {
+          shopName: 'Nanjappa Electricals & Motor Works',
+          shopAddress: 'Shop #3, 2nd Cross, Old Madras Road, Indiranagar',
+          photo: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80',
+          toolsVerified: ['Fluke 101 Digital Multimeter', 'Rotary Hammer Drill', 'Insulated Pliers & Crimper', 'Megger Tester'],
+          inspectedDate: 'Yesterday by Chapter Inspection Officer',
+        },
+        peerGuarantors: [
+          { name: 'Ramesh Kumar', memberId: 'CK-410', role: 'Master Wireman Guarantor' },
+          { name: 'Sunita Patil', memberId: 'CK-284', role: 'Chapter Executive Member' },
+        ],
+      },
+    },
+    {
+      id: 'KYC-902',
+      name: 'Meena Bai',
+      trade: 'Residential Deep Cleaning Lead',
+      experience: '5 Yrs',
+      verificationMethod: 'skill_assessment',
+      eShramId: 'Not Available (Applied via Practical Demo)',
+      digiLockerStatus: 'Community Peer Vouched',
+      policeCheck: 'Clear (Indiranagar Station)',
+      date: 'Today, 02:45 PM',
+      status: 'pending',
+      skillAssessment: {
+        status: 'pending_review',
+        practicalScore: '98/100',
+        grade: 'Grade A+ (Senior Sanitation Review)',
+        demoVideo: {
+          title: 'Chemical-Free Steam Tile Cleaning & Disinfection Demo',
+          duration: '1:54 mins',
+          recordedAt: 'Community Centre Kitchen',
+          thumbnail: 'https://images.unsplash.com/photo-1581578731548-c64695cc6952?w=600&auto=format&fit=crop&q=80',
+          description: 'Meena demonstrates commercial steam cleaning on hardened grime and grease traps without toxic acid or surface damage.',
+          checklist: [
+            'Non-acidic chemical safety standards (Passed)',
+            'Appliance protection & masking (Passed)',
+            'High-pressure steam sanitization (Passed)',
+          ],
+        },
+        workshopProof: {
+          shopName: 'Meena Professional Cleaning Gear Depot',
+          shopAddress: 'Ward 112 Co-op Storage Hub, Domlur',
+          photo: 'https://images.unsplash.com/photo-1527515637462-cff94eecc1ac?w=600&auto=format&fit=crop&q=80',
+          toolsVerified: ['Karcher High-Pressure Steamer', 'Industrial Wet & Dry Vacuum', 'Bio-degradable Sanitizers'],
+          inspectedDate: 'Today by Welfare Inspection Officer',
+        },
+        peerGuarantors: [
+          { name: 'Sunita Patil', memberId: 'CK-284', role: 'Cleaning Guild Lead Guarantor' },
+          { name: 'Ramesh Kumar', memberId: 'CK-410', role: 'Cooperative Co-Owner' },
+        ],
+      },
+    },
+    {
+      id: 'KYC-903',
+      name: 'Abdul Kalam',
+      trade: 'Plumber & Water Motor Specialist',
+      experience: '6 Yrs',
+      verificationMethod: 'dpi_eshram',
+      eShramId: 'e-Shram #6610-9944',
+      digiLockerStatus: 'Verified (Govt ITI Plumber)',
+      policeCheck: 'Clear (Ulsoor Station)',
+      date: 'Yesterday',
+      status: 'pending',
+      skillAssessment: {
+        status: 'verified',
+        practicalScore: '95/100',
+        grade: 'Grade A (ITI + Practical)',
+        demoVideo: {
+          title: 'Submersible Pump Overhaul & Capacitor Bench Test',
+          duration: '2:05 mins',
+          recordedAt: 'Ulsoor Sanitation Workshop',
+          thumbnail: 'https://images.unsplash.com/photo-1504148455328-c376907d081c?w=600&auto=format&fit=crop&q=80',
+          description: 'Abdul demonstrates replacing worn impellers and testing capacitor draw under simulated water head.',
+          checklist: ['Seal leakage check (Passed)', 'Electrical safety isolation (Passed)'],
+        },
+        workshopProof: {
+          shopName: 'Kalam Plumbing & Motor Works',
+          shopAddress: 'Near Ulsoor Lake, Ward 110, Bengaluru',
+          photo: 'https://images.unsplash.com/photo-1542013936693-884638332954?w=600&auto=format&fit=crop&q=80',
+          toolsVerified: ['Rothenberger Pipe Threader', 'Pressure Gauge Tester', 'Digital Clamp Meter'],
+          inspectedDate: '18 Feb 2024',
+        },
+        peerGuarantors: [
+          { name: 'Mohammad Arif', memberId: 'CK-312', role: 'Plumbing Guild Peer' },
+        ],
+      },
+    },
+  ]);
+
+  const [resolutionsList, setResolutionsList] = useState(RESOLUTIONS);
+
+  const approveWorkerKyc = (applicantId) => {
+    setKycQueue((prev) =>
+      prev.map((k) => (k.id === applicantId ? { ...k, status: 'approved' } : k))
+    );
+  };
+
+  const rejectWorkerKyc = (applicantId) => {
+    setKycQueue((prev) =>
+      prev.map((k) => (k.id === applicantId ? { ...k, status: 'rejected' } : k))
+    );
+  };
+
+  const publishResolution = (newRes) => {
+    setResolutionsList((prev) => [newRes, ...prev]);
+  };
+
+  // Save to localStorage
+  useEffect(() => {
+    localStorage.setItem('sahyog_bookings', JSON.stringify(bookings));
+  }, [bookings]);
+
+  useEffect(() => {
+    localStorage.setItem('sahyog_negotiation', JSON.stringify(negotiationThread));
+  }, [negotiationThread]);
+
+  // Navigation helper
+  const navigateTo = (view, payload = {}) => {
+    if (payload.workerId) setSelectedWorkerId(payload.workerId);
+    if (payload.category) setSelectedCategory(payload.category);
+    setCurrentView(view);
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  const currentWorker = WORKERS.find((w) => w.id === selectedWorkerId) || WORKERS[0];
+
+  const submitCounterOffer = (amount, text = '') => {
+    const newMsg = {
+      id: `msg-${Date.now()}`,
+      sender: 'customer',
+      name: 'You',
+      text: text || `Can you do it for ₹${amount}?`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    const workerResponse = {
+      id: `msg-${Date.now() + 1}`,
+      sender: 'worker',
+      name: `${currentWorker.name.split(' ')[0]} (Worker)`,
+      text: `Understood! I accept ₹${amount} with ISI certified materials and cooperative safety warranty.`,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    const acceptedMsg = {
+      id: `msg-${Date.now() + 2}`,
+      sender: 'system',
+      name: 'System',
+      text: `Agreed ₹${amount}`,
+      agreedPrice: amount,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setNegotiationThread((prev) => [...prev, newMsg, workerResponse, acceptedMsg]);
+    setAgreedLabourPrice(amount);
+  };
+
+  const createBooking = ({
+    worker = currentWorker,
+    serviceTitle = 'Direct Service',
+    address = `${selectedLocality}, ${activeCityConfig.name}`,
+    timeSlot = 'Today, 4:00 PM – 5:00 PM',
+    labourAmount = agreedLabourPrice,
+    paymentMethod = 'UPI',
+  }) => {
+    const bookingId = `SHG-${Math.floor(1000 + Math.random() * 9000)}`;
+    const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
+
+    const newBooking = {
+      id: bookingId,
+      workerId: worker.id,
+      workerName: worker.name,
+      workerTrade: `${worker.trade} • Co-Owner #${worker.memberId}`,
+      workerAvatar: worker.detailAvatar || worker.avatar,
+      serviceTitle,
+      address,
+      timeSlot,
+      labourAmount,
+      platformCommission: 0,
+      insuranceAmount: 10,
+      totalEscrow: labourAmount + 10,
+      status: 'escrow_locked',
+      releaseOtp: otp,
+      paymentMethod,
+      bookingDate: new Date().toLocaleDateString('en-GB', {
+        day: '2-digit',
+        month: 'short',
+        year: 'numeric',
+      }),
+      timeline: [
+        { step: 1, title: 'Escrow Deposit Held', status: 'completed', time: 'Just now' },
+        { step: 2, title: 'Technician Dispatched', status: 'completed', time: 'ETA 15m' },
+        { step: 3, title: 'Service in Progress', status: 'current', time: timeSlot },
+        { step: 4, title: 'Release 4-Digit OTP', status: 'pending', time: 'After inspection' },
+      ],
+    };
+
+    setBookings((prev) => [newBooking, ...prev]);
+    setSuccessBookingModal(newBooking);
+    return newBooking;
+  };
+
+  const releaseEscrow = (bookingId) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          return {
+            ...b,
+            status: 'released',
+            timeline: b.timeline.map((step) => ({ ...step, status: 'completed' })),
+          };
+        }
+        return b;
+      })
+    );
+  };
+
+  const handleLogin = (phone, role, name = 'Cooperative Member') => {
+    const user = {
+      name,
+      phone,
+      role,
+      locality: 'Indiranagar, Ward 112',
+      avatar:
+        role === 'worker'
+          ? currentWorker.avatar
+          : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAe-bmDk-p9IcNdQl6BkQrbmVmPBPTNgu01w2_iO_U1pK2hrq7IEiWyxgOBzgbhnlrXQHAZgeDP-jBJUf8tlZdKmx0_SZMmuMCvDguPHCMheSQdcWvSDDJZSGnJISSC6iCbfU9YWWnni8sz0NcCHUYzMftcRkW8ZCHU0xJXCEU1Y1gfXRtGw1eSQpfBNhrUY_fXf2mkzk6sAatdarPxMwgKHkT8zF4v7GccQTCEny4qkelRazmb6IzG',
+    };
+    setCurrentUser(user);
+    switchRole(role);
+  };
+
+  return (
+    <AppContext.Provider
+      value={{
+        language,
+        setLanguage,
+        t,
+        currentView,
+        navigateTo,
+        selectedWorkerId,
+        setSelectedWorkerId,
+        currentWorker,
+        selectedCategory,
+        setSelectedCategory,
+        searchQuery,
+        setSearchQuery,
+        availableOnly,
+        setAvailableOnly,
+        sortBy,
+        setSortBy,
+        userRole,
+        switchRole,
+        currentUser,
+        handleLogin,
+        bookings,
+        createBooking,
+        releaseEscrow,
+        negotiationThread,
+        submitCounterOffer,
+        agreedLabourPrice,
+        setAgreedLabourPrice,
+        // Modals
+        emergencyModalOpen,
+        setEmergencyModalOpen,
+        successBookingModal,
+        setSuccessBookingModal,
+        roleModalOpen,
+        setRoleModalOpen,
+        eShramWorkerModal,
+        setEShramWorkerModal,
+        digiLockerWorkerModal,
+        setDigiLockerWorkerModal,
+        voiceSearchModalOpen,
+        setVoiceSearchModalOpen,
+        disputeModalBooking,
+        setDisputeModalBooking,
+        auditReportModalOpen,
+        setAuditReportModalOpen,
+        invoiceModalBooking,
+        setInvoiceModalBooking,
+        skillAssessmentModalWorker,
+        setSkillAssessmentModalWorker,
+        // Disputes & Refunds
+        raiseDispute,
+        adminResolveDispute,
+        // Worker state
+        workerOnDuty,
+        setWorkerOnDuty,
+        workerEarnings,
+        incomingJobs,
+        claimEscrowWithPin,
+        acceptIncomingJob,
+        declineIncomingJob,
+        // Admin state
+        kycQueue,
+        approveWorkerKyc,
+        rejectWorkerKyc,
+        // Location State
+        selectedCity,
+        setSelectedCity,
+        selectedLocality,
+        setSelectedLocality,
+        locationModalOpen,
+        setLocationModalOpen,
+        updateLocation,
+        supportedCities: SUPPORTED_CITIES,
+        activeCityConfig,
+        cooperativeInfo: dynamicCooperativeInfo,
+        workers: WORKERS,
+        categories: CATEGORIES,
+      }}
+    >
+      {children}
+    </AppContext.Provider>
+  );
+};
+
+export const useApp = () => useContext(AppContext);
