@@ -92,18 +92,18 @@ export const HomePage = () => {
         </form>
 
         {/* Bharat AI Voice Assistant Card - Fully Localized */}
-        <div className="bg-gradient-to-r from-emerald-950 via-primary to-emerald-900 text-white rounded-xl p-3.5 shadow-xs flex items-center justify-between gap-3 border border-emerald-700/40 mt-1">
-          <div className="flex items-center gap-2.5">
+        <div className="bg-gradient-to-r from-emerald-950 via-primary to-emerald-900 text-white rounded-xl p-3 sm:p-3.5 shadow-xs flex items-center justify-between gap-2.5 border border-emerald-700/40 mt-1">
+          <div className="flex items-center gap-2.5 min-w-0">
             <div className="w-10 h-10 rounded-full bg-amber-400 text-emerald-950 flex items-center justify-center shrink-0 font-black shadow-xs">
               <span className="material-symbols-outlined text-[24px] material-symbols-fill">mic</span>
             </div>
-            <div className="flex flex-col">
+            <div className="flex flex-col min-w-0">
               <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-amber-300 tracking-wide">
+                <span className="text-xs font-black text-amber-300 tracking-wide truncate">
                   {t('voiceBannerTitle')}
                 </span>
               </div>
-              <p className="text-[11px] text-emerald-100 leading-snug mt-0.5">
+              <p className="text-[11px] text-emerald-100 leading-snug mt-0.5 line-clamp-2">
                 {t('voiceBannerDesc')}
               </p>
             </div>
@@ -111,16 +111,16 @@ export const HomePage = () => {
           <button
             type="button"
             onClick={() => setVoiceSearchModalOpen(true)}
-            className="px-3.5 py-2 bg-amber-400 hover:bg-amber-300 active:scale-95 text-emerald-950 rounded-lg font-black text-xs shrink-0 shadow-xs flex items-center gap-1.5 transition-all"
+            className="px-3 py-2 bg-amber-400 hover:bg-amber-300 active:scale-95 text-emerald-950 rounded-lg font-black text-xs shrink-0 shadow-xs flex items-center gap-1 transition-all"
             title={t('voiceSearchBtn')}
           >
             <span className="material-symbols-outlined text-[16px]">mic</span>
-            <span>{t('voiceSearchBtn')}</span>
+            <span className="hidden xs:inline">{t('voiceSearchBtn')}</span>
           </button>
         </div>
 
         {/* Interactive Location Indicator & Quick Switcher */}
-        <div className="flex items-center justify-between px-space-xxs mt-1 bg-surface-container-low/70 rounded-xl p-2.5 border border-surface-variant/40 shadow-2xs">
+        <div className="flex items-center justify-between px-space-xxs mt-1 bg-surface-container-low/80 rounded-xl p-2.5 border border-surface-variant/40 shadow-2xs gap-2">
           <div className="flex items-center gap-2 min-w-0">
             <span className="material-symbols-outlined text-primary text-[20px] shrink-0 material-symbols-fill">
               location_on
@@ -137,7 +137,7 @@ export const HomePage = () => {
           <button
             type="button"
             onClick={() => setLocationModalOpen(true)}
-            className="font-label-sm text-label-sm text-primary font-black bg-primary-fixed/50 hover:bg-primary-fixed active:scale-95 px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 shrink-0 ml-2 shadow-xs border border-primary/20"
+            className="font-label-sm text-label-sm text-primary font-black bg-primary-fixed/50 hover:bg-primary-fixed active:scale-95 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 shrink-0 shadow-xs border border-primary/20"
           >
             <span className="material-symbols-outlined text-[14px]">edit_location</span>
             <span>{t('changeLocation') || 'बदलें'}</span>

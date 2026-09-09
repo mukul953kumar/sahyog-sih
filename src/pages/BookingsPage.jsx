@@ -27,7 +27,7 @@ export const BookingsPage = () => {
         </div>
         <button
           onClick={() => navigateTo('workers')}
-          className="px-3 py-1.5 rounded-lg bg-primary text-white font-label-md font-bold text-xs"
+          className="px-3 py-2 rounded-xl bg-primary text-white font-bold text-xs shrink-0 active:scale-95 transition-all shadow-xs"
         >
           + Book Service
         </button>
@@ -190,11 +190,11 @@ export const BookingsPage = () => {
                         {b.releaseOtp}
                       </span>
                     </div>
-                    <div className="flex gap-2 pt-1">
+                    <div className="flex flex-col sm:flex-row gap-2 pt-1">
                       <button
                         type="button"
                         onClick={() => releaseEscrow(b.id)}
-                        className="flex-1 h-11 bg-primary text-white rounded-lg font-title-md font-bold flex items-center justify-center gap-1.5 shadow-xs active:bg-primary-container text-xs"
+                        className="w-full sm:flex-1 h-11 bg-primary text-white rounded-xl font-bold flex items-center justify-center gap-1.5 shadow-xs active:scale-98 transition-all text-xs"
                       >
                         <span className="material-symbols-outlined text-[18px]">verified</span>
                         <span>Release Payment (Simulate)</span>
@@ -202,7 +202,7 @@ export const BookingsPage = () => {
                       <button
                         type="button"
                         onClick={() => setDisputeModalBooking(b)}
-                        className="px-3 h-11 bg-error/10 hover:bg-error/20 text-error rounded-lg font-bold text-xs border border-error/30 flex items-center gap-1"
+                        className="w-full sm:w-auto px-4 h-10 sm:h-11 bg-error/10 hover:bg-error/20 text-error rounded-xl font-bold text-xs border border-error/30 flex items-center justify-center gap-1 active:scale-98 transition-all"
                         title="Freeze funds if technician does not show up or service is defective"
                       >
                         <span className="material-symbols-outlined text-[16px]">gavel</span>

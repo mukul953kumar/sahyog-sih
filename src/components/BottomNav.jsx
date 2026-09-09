@@ -35,8 +35,8 @@ export const BottomNav = () => {
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-variant pb-safe shadow-[0_-2px_10px_rgba(0,0,0,0.05)]">
-      <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-layout-margin-mobile">
+    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-variant/50 pb-safe shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+      <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-1 sm:px-3">
         {tabs.map((tab) => {
           const isActive =
             currentView === tab.id ||
@@ -47,27 +47,27 @@ export const BottomNav = () => {
             <button
               key={tab.id}
               onClick={() => navigateTo(tab.id)}
-              className={`flex flex-col items-center justify-center flex-1 min-w-[55px] py-1 transition-all ${
+              className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 transition-all active:scale-90 select-none ${
                 isActive ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
               }`}
             >
-              <div className="relative">
+              <div className="relative flex items-center justify-center">
                 <span
-                  className={`material-symbols-outlined text-[24px] transition-transform ${
-                    isActive ? 'scale-110 material-symbols-fill' : ''
+                  className={`material-symbols-outlined text-[23px] transition-transform ${
+                    isActive ? 'scale-110 material-symbols-fill text-primary' : 'text-outline'
                   }`}
                 >
                   {tab.icon}
                 </span>
                 {tab.badge > 0 ? (
-                  <span className="absolute -top-1 -right-2 bg-secondary text-white text-[10px] font-bold rounded-full w-4 h-4 flex items-center justify-center animate-pulse">
+                  <span className="absolute -top-1 -right-2 bg-secondary text-white text-[9px] font-black rounded-full w-4 h-4 flex items-center justify-center shadow-xs animate-pulse">
                     {tab.badge}
                   </span>
                 ) : null}
               </div>
               <span
-                className={`font-label-sm text-[11px] mt-0.5 tracking-tight ${
-                  isActive ? 'font-bold text-primary' : 'font-medium'
+                className={`text-[10px] sm:text-[11px] mt-0.5 tracking-tight truncate max-w-[62px] sm:max-w-[74px] text-center leading-tight ${
+                  isActive ? 'font-extrabold text-primary' : 'font-semibold text-on-surface-variant'
                 }`}
               >
                 {tab.label}

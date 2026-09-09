@@ -55,9 +55,9 @@ const AppContent = () => {
   };
 
   return (
-    <div className="bg-surface-container-lowest text-on-surface flex flex-col min-h-screen">
+    <div className="bg-surface-container-lowest text-on-surface flex flex-col min-h-screen overflow-x-hidden">
       <Header />
-      <main className="flex-1 flex flex-col relative w-full pt-16 bg-surface-container-lowest">
+      <main className="flex-1 flex flex-col relative w-full pt-16 pb-24 sm:pb-28 bg-surface-container-lowest overflow-x-hidden">
         {renderCurrentView()}
       </main>
       <BottomNav />

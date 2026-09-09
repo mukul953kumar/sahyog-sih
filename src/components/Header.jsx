@@ -56,34 +56,34 @@ export const Header = () => {
   return (
     <>
       <header className="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-variant/40">
-        <div className="max-w-2xl mx-auto h-16 px-layout-margin-mobile flex items-center justify-between gap-2">
+        <div className="max-w-2xl mx-auto h-16 px-3 sm:px-4 flex items-center justify-between gap-1.5">
           {/* Left: Back button or Logo + Title */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 shrink min-w-0">
             {isDetailPage ? (
               <button
                 onClick={() => navigateTo(currentView === 'booking' ? 'worker-detail' : 'workers')}
-                className="w-10 h-10 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-colors"
+                className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-colors shrink-0"
                 aria-label="Back"
               >
-                <span className="material-symbols-outlined text-[24px]">arrow_back</span>
+                <span className="material-symbols-outlined text-[22px]">arrow_back</span>
               </button>
             ) : null}
 
             {/* SAHYOG Brand Logo Mark */}
             <div
               onClick={() => navigateTo('home')}
-              className="flex items-center gap-2 cursor-pointer select-none"
+              className="flex items-center gap-1.5 cursor-pointer select-none min-w-0"
             >
-              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary shadow-xs">
-                <span className="material-symbols-outlined text-[20px] text-white material-symbols-fill">
+              <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary shadow-xs shrink-0">
+                <span className="material-symbols-outlined text-[19px] text-white material-symbols-fill">
                   handshake
                 </span>
               </div>
-              <div className="flex flex-col">
-                <span className="font-headline-sm text-headline-sm text-primary tracking-tight leading-tight font-black">
+              <div className="flex flex-col min-w-0">
+                <span className="font-headline-sm text-[16px] sm:text-headline-sm text-primary tracking-tight leading-none font-black truncate">
                   {cooperativeInfo.name}
                 </span>
-                <span className="font-label-sm text-label-sm text-on-surface-variant leading-none font-semibold">
+                <span className="text-[10px] sm:text-label-sm text-on-surface-variant leading-tight font-semibold truncate hidden xs:block">
                   {getSubTitle()}
                 </span>
               </div>
@@ -91,47 +91,47 @@ export const Header = () => {
           </div>
 
           {/* Right Action Group: Location + Language + Role Switcher */}
-          <div className="flex items-center gap-1.5">
+          <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Quick Location Badge & Selector */}
             <button
               type="button"
               onClick={() => setLocationModalOpen(true)}
-              className="flex items-center gap-1 bg-surface-container hover:bg-surface-container-high px-2 py-1.5 rounded-lg border border-surface-variant/40 text-xs font-bold text-on-surface transition-all group"
+              className="flex items-center gap-0.5 sm:gap-1 bg-surface-container hover:bg-surface-container-high px-1.5 sm:px-2 py-1 rounded-lg border border-surface-variant/40 text-[11px] sm:text-xs font-bold text-on-surface transition-all group"
               title="Change City or Locality"
             >
-              <span className="material-symbols-outlined text-[16px] text-primary material-symbols-fill group-hover:scale-110 transition-transform">
+              <span className="material-symbols-outlined text-[15px] sm:text-[16px] text-primary material-symbols-fill group-hover:scale-110 transition-transform shrink-0">
                 location_on
               </span>
-              <span className="max-w-[70px] sm:max-w-[100px] truncate">
+              <span className="max-w-[55px] xs:max-w-[70px] sm:max-w-[100px] truncate">
                 {activeCityConfig?.name || cooperativeInfo.city}
               </span>
-              <span className="material-symbols-outlined text-[12px] text-outline">
+              <span className="material-symbols-outlined text-[11px] sm:text-[12px] text-outline shrink-0">
                 expand_more
               </span>
             </button>
 
             {/* Language Selector Dropdown */}
-            <div className="flex items-center gap-1 bg-surface-container px-2 py-1.5 rounded-lg border border-surface-variant/40 text-xs font-bold text-on-surface">
-              <span className="material-symbols-outlined text-[16px] text-primary">translate</span>
+            <div className="flex items-center gap-0.5 bg-surface-container px-1.5 sm:px-2 py-1 rounded-lg border border-surface-variant/40 text-[11px] sm:text-xs font-bold text-on-surface shrink-0">
+              <span className="material-symbols-outlined text-[14px] sm:text-[15px] text-primary shrink-0">translate</span>
               <select
                 aria-label="Select Language"
                 value={language}
                 onChange={(e) => setLanguage(e.target.value)}
-                className="bg-transparent text-on-surface focus:outline-none cursor-pointer pr-1 font-semibold"
+                className="bg-transparent text-on-surface focus:outline-none cursor-pointer pr-0.5 font-semibold text-[11px] sm:text-xs"
               >
                 <option value="en">EN</option>
-                <option value="hi">हिन्दी</option>
-                <option value="kn">ಕನ್ನಡ</option>
-                <option value="mr">मराठी</option>
-                <option value="ta">தமிழ்</option>
+                <option value="hi">हि</option>
+                <option value="kn">ಕ</option>
+                <option value="mr">म</option>
+                <option value="ta">த</option>
               </select>
             </div>
 
             {/* Role Switcher Badge Button */}
-            <div className="relative">
+            <div className="relative shrink-0">
               <button
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                className={`min-h-[34px] px-2.5 py-1 flex items-center gap-1 rounded-lg text-xs font-bold transition-all ${
+                className={`min-h-[30px] sm:min-h-[34px] px-1.5 sm:px-2.5 py-1 flex items-center gap-0.5 sm:gap-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
                   userRole === 'worker'
                     ? 'bg-primary-fixed text-on-primary-fixed border border-primary/30'
                     : userRole === 'admin'
@@ -140,15 +140,17 @@ export const Header = () => {
                 }`}
                 title="Switch between Customer, Worker-Owner, or Admin"
               >
-                <span className="material-symbols-outlined text-[16px]">
+                <span className="material-symbols-outlined text-[15px] sm:text-[16px] shrink-0">
                   {userRole === 'worker'
                     ? 'handyman'
                     : userRole === 'admin'
                     ? 'admin_panel_settings'
                     : 'person'}
                 </span>
-                <span className="max-w-[70px] truncate">{getRoleLabel().split(' ')[0]}</span>
-                <span className="material-symbols-outlined text-[14px]">expand_more</span>
+                <span className="max-w-[45px] xs:max-w-[65px] sm:max-w-[75px] truncate">
+                  {getRoleLabel().split(' ')[0]}
+                </span>
+                <span className="material-symbols-outlined text-[11px] sm:text-[12px] shrink-0">expand_more</span>
               </button>
 
               {/* Role Dropdown Menu */}

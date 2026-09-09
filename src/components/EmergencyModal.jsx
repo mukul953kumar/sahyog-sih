@@ -107,21 +107,21 @@ export const EmergencyModal = () => {
             type="button"
             disabled={isDispatching}
             onClick={handleQuickDispatch}
-            className="w-full h-12 rounded-lg bg-tertiary text-on-tertiary font-title-md text-title-md font-bold flex items-center justify-center gap-2 shadow-md active:scale-98 transition-all disabled:opacity-50"
+            className="w-full h-auto min-h-12 py-2.5 px-3 rounded-xl bg-tertiary text-on-tertiary font-bold flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all disabled:opacity-50 text-xs sm:text-sm text-center leading-tight"
           >
             {isDispatching ? (
               <>
-                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin"></span>
+                <span className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin shrink-0"></span>
                 <span>Connecting to Nearest Co-op Unit...</span>
               </>
             ) : (
               <>
-                <span className="material-symbols-outlined text-[20px]">bolt</span>
-                <span>Dispatch Nearest Tech Now (₹399 Held in Escrow)</span>
+                <span className="material-symbols-outlined text-[20px] shrink-0">bolt</span>
+                <span className="truncate">Dispatch Nearest Tech Now (₹399 Escrow)</span>
               </>
             )}
           </button>
-          <p className="text-center font-label-sm text-label-sm text-on-surface-variant">
+          <p className="text-center font-label-sm text-[11px] text-on-surface-variant">
             No cancellation fee if technician is not on site within 20 minutes.
           </p>
         </div>

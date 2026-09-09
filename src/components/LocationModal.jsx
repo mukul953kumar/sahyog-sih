@@ -117,21 +117,21 @@ export const LocationModal = () => {
               disabled={isDetectingGps}
               className="w-full py-2.5 px-3.5 bg-secondary-container/60 hover:bg-secondary-container text-on-secondary-container rounded-xl border border-secondary/30 flex items-center justify-between font-label-lg font-bold transition-all shadow-xs group"
             >
-              <div className="flex items-center gap-2.5">
+              <div className="flex items-center gap-2 min-w-0 flex-1">
                 <span
-                  className={`material-symbols-outlined text-[20px] text-secondary ${
+                  className={`material-symbols-outlined text-[20px] text-secondary shrink-0 ${
                     isDetectingGps ? 'animate-spin' : 'material-symbols-fill'
                   }`}
                 >
                   {isDetectingGps ? 'sync' : 'my_location'}
                 </span>
-                <span>
+                <span className="text-xs sm:text-sm truncate">
                   {isDetectingGps
                     ? 'जीपीएस लोकेशन ट्रैक हो रही है...'
-                    : t('detectLocation') || 'मेरी वर्तमान लोकेशन उपयोग करें (GPS)'}
+                    : t('detectLocation') || 'मेरी लोकेशन उपयोग करें (GPS)'}
                 </span>
               </div>
-              <span className="text-[11px] bg-white/80 px-2 py-0.5 rounded-md font-bold text-secondary">
+              <span className="text-[10px] sm:text-[11px] bg-white/80 px-2 py-0.5 rounded-md font-bold text-secondary shrink-0 ml-1">
                 Auto Detect
               </span>
             </button>

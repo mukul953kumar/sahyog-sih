@@ -48,25 +48,25 @@ export const WorkerProfilePage = () => {
         </div>
 
         {/* Clickable Trust Verification Badges (DPI & Practical Skill Assessment) */}
-        <div className="flex flex-wrap gap-space-xs pt-space-xs">
+        <div className="flex flex-wrap gap-1.5 pt-space-xs">
           {/* Practical Skill Assessment (2-min demo video + workshop photo proof) */}
           {currentWorker.skillAssessment && (
             <button
               type="button"
               onClick={() => setSkillAssessmentModalWorker(currentWorker)}
-              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-950 hover:bg-amber-100 border border-amber-300 font-label-sm text-label-sm font-black transition-all active:scale-95 shadow-xs"
+              className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-lg bg-amber-50 text-amber-950 hover:bg-amber-100 border border-amber-300 text-xs font-black transition-all active:scale-95 shadow-xs max-w-full truncate"
               title="Click to view 2-minute live work demo video and workshop proof"
             >
-              <span className="material-symbols-outlined text-[15px] text-amber-700 material-symbols-fill">
+              <span className="material-symbols-outlined text-[15px] text-amber-700 material-symbols-fill shrink-0">
                 smart_display
               </span>
-              <span>2-Min Work Demo & Shop Proof (Click to View)</span>
+              <span className="truncate">2-Min Demo & Shop Proof (View)</span>
             </button>
           )}
 
           <button
             onClick={() => setEShramWorkerModal(currentWorker)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 font-label-sm text-label-sm font-bold transition-all active:scale-95"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-50 text-emerald-800 hover:bg-emerald-100 border border-emerald-300 text-xs font-bold transition-all active:scale-95"
             title="Click to preview official Ministry of Labour e-Shram Universal ID Card"
           >
             <span className="material-symbols-outlined text-[14px]">badge</span>
@@ -75,7 +75,7 @@ export const WorkerProfilePage = () => {
 
           <button
             onClick={() => setDigiLockerWorkerModal(currentWorker)}
-            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-300 font-label-sm text-label-sm font-bold transition-all active:scale-95"
+            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-50 text-blue-800 hover:bg-blue-100 border border-blue-300 text-xs font-bold transition-all active:scale-95"
             title="Click to preview official DigiLocker certified trade certificate"
           >
             <span className="material-symbols-outlined text-[14px]">lock</span>
@@ -217,28 +217,28 @@ export const WorkerProfilePage = () => {
       </div>
 
       {/* Sticky Bottom Booking Action Dock */}
-      <div className="fixed bottom-16 left-0 right-0 z-30 bg-surface-container-lowest/95 backdrop-blur-md border-t border-surface-variant/40 p-space-sm">
-        <div className="max-w-2xl mx-auto flex items-center justify-between gap-space-sm">
-          <div>
-            <span className="font-label-sm text-label-sm text-on-surface-variant block">
-              Agreed Standard Labour
+      <div className="fixed bottom-16 left-0 right-0 z-30 bg-surface-container-lowest/95 backdrop-blur-md border-t border-surface-variant/40 px-3 py-2.5 sm:px-4 sm:py-3 shadow-lg">
+        <div className="max-w-2xl mx-auto flex items-center justify-between gap-2 sm:gap-3">
+          <div className="min-w-0 shrink-0">
+            <span className="text-[10px] sm:text-xs text-on-surface-variant block font-semibold truncate leading-tight">
+              Standard Labour
             </span>
             <div className="flex items-baseline gap-1">
-              <span className="font-headline-sm text-headline-sm text-primary font-black">
+              <span className="text-lg sm:text-xl text-primary font-black">
                 ₹{currentWorker.standardJobQuote}
               </span>
-              <span className="font-label-sm text-[11px] text-secondary font-bold">
-                0% Commission Cut
+              <span className="text-[10px] sm:text-[11px] text-secondary font-bold whitespace-nowrap">
+                0% Cut
               </span>
             </div>
           </div>
           <button
             onClick={() => navigateTo('booking')}
             type="button"
-            className="flex-1 max-w-xs h-12 rounded-lg bg-primary text-on-primary font-title-md text-title-md font-bold flex items-center justify-center gap-2 shadow-sm active:bg-primary-container transition-all"
+            className="flex-1 min-w-0 h-11 sm:h-12 px-3 sm:px-4 rounded-xl bg-primary text-on-primary text-xs sm:text-sm font-bold flex items-center justify-center gap-1 sm:gap-2 shadow-md active:scale-95 transition-all"
           >
-            <span>{t('negotiateAndBookBtn')}</span>
-            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+            <span className="truncate">{t('negotiateAndBookBtn')}</span>
+            <span className="material-symbols-outlined text-[18px] sm:text-[20px] shrink-0">arrow_forward</span>
           </button>
         </div>
       </div>

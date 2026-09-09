@@ -52,7 +52,7 @@ export const BookingCheckoutPage = () => {
   };
 
   return (
-    <div className="w-full max-w-md mx-auto px-layout-margin-mobile py-space-md flex flex-col gap-space-lg pb-24">
+    <div className="w-full max-w-md mx-auto px-layout-margin-mobile py-space-md flex flex-col gap-space-lg pb-32">
       {/* 1. Booking Context Banner */}
       <section className="bg-surface-container-lowest rounded-xl shadow-sm border border-surface-variant/40 overflow-hidden flex flex-col p-space-md">
         <div className="flex items-center justify-between gap-space-xs mb-space-xs">
@@ -193,9 +193,9 @@ export const BookingCheckoutPage = () => {
                 key={amt}
                 type="button"
                 onClick={() => handleQuickChip(amt)}
-                className={`flex-1 py-1 rounded-lg text-xs font-bold border transition-all ${
+                className={`flex-1 py-1.5 rounded-lg text-xs font-bold border transition-all active:scale-95 ${
                   agreedLabourPrice === amt
-                    ? 'bg-primary text-white border-primary'
+                    ? 'bg-primary text-white border-primary shadow-xs'
                     : 'bg-surface-container-low text-on-surface border-surface-variant hover:bg-surface-container'
                 }`}
               >
@@ -222,14 +222,14 @@ export const BookingCheckoutPage = () => {
             </div>
             <button
               type="submit"
-              className="h-10 px-3 rounded-lg bg-primary text-white font-label-md font-bold text-xs"
+              className="h-10 px-3.5 rounded-lg bg-primary text-white font-label-md font-bold text-xs shrink-0 active:scale-95 transition-all shadow-xs"
             >
               Send Offer
             </button>
             <button
               type="button"
               onClick={() => setIsNegotiating(false)}
-              className="h-10 px-2 text-outline hover:text-on-surface text-xs"
+              className="h-10 px-2.5 text-outline hover:text-on-surface text-xs shrink-0 active:scale-95 transition-all"
             >
               Cancel
             </button>
@@ -388,9 +388,9 @@ export const BookingCheckoutPage = () => {
               key={m.id}
               type="button"
               onClick={() => setPaymentMethod(m.id)}
-              className={`p-2.5 rounded-lg flex flex-col items-center justify-center gap-1 border text-center transition-all ${
+              className={`p-2.5 rounded-xl flex flex-col items-center justify-center gap-1 border text-center transition-all active:scale-95 ${
                 paymentMethod === m.id
-                  ? 'border-primary bg-primary-fixed/20 text-primary font-bold'
+                  ? 'border-primary bg-primary-fixed/20 text-primary font-bold shadow-xs'
                   : 'border-surface-variant bg-surface-container-low text-on-surface'
               }`}
             >
@@ -406,10 +406,10 @@ export const BookingCheckoutPage = () => {
         <button
           type="button"
           onClick={handleConfirmCheckout}
-          className="w-full h-14 rounded-xl bg-primary text-on-primary font-title-md text-title-md font-extrabold flex items-center justify-center gap-2 shadow-md active:bg-primary-container transition-all"
+          className="w-full h-13 sm:h-14 px-3 sm:px-4 rounded-xl bg-primary text-on-primary text-xs sm:text-base font-extrabold flex items-center justify-center gap-1.5 sm:gap-2 shadow-md active:scale-95 transition-all"
         >
-          <span className="material-symbols-outlined text-[22px]">lock</span>
-          <span>{t('depositAndConfirmBtn')} (₹{totalEscrowAmount})</span>
+          <span className="material-symbols-outlined text-[20px] sm:text-[22px] shrink-0">lock</span>
+          <span className="truncate">{t('depositAndConfirmBtn')} (₹{totalEscrowAmount})</span>
         </button>
         <p className="text-center font-label-sm text-[11px] text-on-surface-variant mt-2">
           Zero risk: 100% money back guarantee if service is not rendered.

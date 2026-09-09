@@ -211,7 +211,7 @@ export const AdminDashboardPage = () => {
                   <button
                     type="button"
                     onClick={() => handleResolve(b.id, 'refund_customer')}
-                    className="w-full sm:flex-1 h-9 rounded-lg bg-error text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:opacity-90"
+                    className="w-full sm:flex-1 h-10 rounded-xl bg-error text-white font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-98 transition-all px-3"
                   >
                     <span className="material-symbols-outlined text-[16px]">currency_exchange</span>
                     <span>100% Refund to Customer (Zero Fees)</span>
@@ -219,7 +219,7 @@ export const AdminDashboardPage = () => {
                   <button
                     type="button"
                     onClick={() => handleResolve(b.id, 'pay_worker')}
-                    className="w-full sm:w-auto px-3 h-9 rounded-lg bg-surface-container-high hover:bg-surface-container text-on-surface font-bold text-xs flex items-center justify-center gap-1"
+                    className="w-full sm:w-auto px-4 h-10 rounded-xl bg-surface-container-high hover:bg-surface-container text-on-surface font-bold text-xs flex items-center justify-center gap-1 active:scale-98 transition-all"
                   >
                     <span className="material-symbols-outlined text-[16px]">verified</span>
                     <span>Release to Worker</span>
@@ -341,18 +341,19 @@ export const AdminDashboardPage = () => {
               </div>
 
               {applicant.status === 'pending' && (
-                <div className="flex items-center gap-2 pt-1">
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
                   <button
                     type="button"
                     onClick={() => approveWorkerKyc(applicant.id)}
-                    className="flex-1 h-9 rounded bg-primary text-white font-label-sm font-bold text-xs shadow-xs"
+                    className="w-full sm:flex-1 h-10 rounded-xl bg-primary text-white font-bold text-xs shadow-xs active:scale-98 transition-all flex items-center justify-center gap-1.5 px-3"
                   >
-                    {t('approveBtn')} & Issue Co-Owner Share
+                    <span className="material-symbols-outlined text-[16px]">how_to_reg</span>
+                    <span>{t('approveBtn')} & Issue Co-Owner Share</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => rejectWorkerKyc(applicant.id)}
-                    className="px-3 h-9 rounded bg-surface-container-high text-on-surface font-label-sm font-bold text-xs"
+                    className="w-full sm:w-auto px-4 h-10 rounded-xl bg-surface-container-high text-on-surface font-bold text-xs active:scale-98 transition-all"
                   >
                     {t('rejectBtn')}
                   </button>
@@ -388,10 +389,10 @@ export const AdminDashboardPage = () => {
         {/* Public Audit Ledger Modal Trigger */}
         <button
           onClick={() => setAuditReportModalOpen(true)}
-          className="w-full h-11 rounded-lg bg-surface-container-high hover:bg-surface-container text-primary font-bold text-xs flex items-center justify-center gap-2 border border-primary/20 shadow-xs"
+          className="w-full h-12 rounded-xl bg-surface-container-high hover:bg-surface-container text-primary font-bold text-xs flex items-center justify-center gap-2 border border-primary/20 shadow-xs active:scale-98 transition-all px-3 text-center"
         >
-          <span className="material-symbols-outlined text-[18px]">receipt_long</span>
-          <span>Open Public Audit Ledger & Block Records (Live Verification)</span>
+          <span className="material-symbols-outlined text-[18px] shrink-0">receipt_long</span>
+          <span className="truncate">Open Public Audit Ledger & Block Records (Live Verification)</span>
         </button>
       </section>
 

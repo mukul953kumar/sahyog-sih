@@ -109,9 +109,9 @@ export const WorkersPage = () => {
   ];
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto pb-space-2xl">
+    <div className="flex flex-col w-full max-w-2xl mx-auto pb-28 sm:pb-32">
       {/* Search & Discovery Header */}
-      <div className="px-layout-margin-mobile pt-space-sm pb-space-xs bg-surface-container-lowest">
+      <div className="px-3 sm:px-layout-margin-mobile pt-space-sm pb-space-xs bg-surface-container-lowest">
         {/* Active Chapter & Location Quick Bar */}
         <div className="flex items-center justify-between bg-surface-container-low/80 rounded-xl px-3 py-2 mb-2.5 border border-surface-variant/40 shadow-2xs">
           <div className="flex items-center gap-2 min-w-0">
@@ -273,10 +273,10 @@ export const WorkersPage = () => {
       </div>
 
       {/* Filter & Sort Control Bar */}
-      <div className="px-layout-margin-mobile py-space-xs bg-surface-container flex items-center justify-between shadow-[0_1px_3px_rgba(20,30,24,0.04)] border-b border-surface-variant/40">
+      <div className="px-3 sm:px-layout-margin-mobile py-space-xs bg-surface-container flex items-center justify-between gap-2 shadow-[0_1px_3px_rgba(20,30,24,0.04)] border-b border-surface-variant/40">
         {/* Sort Dropdown */}
-        <div className="flex items-center gap-space-xs">
-          <span className="font-label-sm text-label-sm text-on-surface-variant uppercase tracking-wider font-semibold">
+        <div className="flex items-center gap-1.5 min-w-0">
+          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold shrink-0">
             {t('sortLabel')}
           </span>
           <div className="relative">
@@ -445,17 +445,19 @@ export const WorkersPage = () => {
               </div>
 
               {/* Action and Pricing Tier */}
-              <div className="flex items-center justify-between pt-1 border-t border-surface-variant/40">
-                <div>
-                  <span className="font-label-sm text-label-sm text-on-surface-variant block">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-surface-variant/40">
+                <div className="min-w-0 shrink">
+                  <span className="text-[10px] sm:text-xs text-on-surface-variant font-semibold block leading-tight">
                     Standard Rate
                   </span>
-                  <span className="font-title-md text-title-md text-primary font-black">
-                    ₹{worker.baseQuote}
-                  </span>
-                  <span className="font-label-sm text-[11px] text-on-surface-variant ml-1">
-                    (No commission)
-                  </span>
+                  <div className="flex items-baseline gap-1">
+                    <span className="text-base sm:text-lg text-primary font-black">
+                      ₹{worker.baseQuote}
+                    </span>
+                    <span className="text-[10px] sm:text-[11px] text-secondary font-bold whitespace-nowrap">
+                      (0% fee)
+                    </span>
+                  </div>
                 </div>
                 <button
                   type="button"
@@ -463,10 +465,10 @@ export const WorkersPage = () => {
                     e.stopPropagation();
                     handleWorkerClick(worker.id);
                   }}
-                  className="px-4 py-2 rounded-lg bg-primary text-on-primary font-title-md text-title-md font-bold flex items-center gap-1.5 shadow-sm active:bg-primary-container transition-colors"
+                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-primary text-on-primary text-xs sm:text-sm font-bold flex items-center gap-1 sm:gap-1.5 shadow-sm active:scale-95 transition-all shrink-0"
                 >
-                  <span>{t('viewProfileAndBook')}</span>
-                  <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+                  <span className="truncate max-w-[150px] sm:max-w-none">{t('viewProfileAndBook')}</span>
+                  <span className="material-symbols-outlined text-[16px] sm:text-[18px] shrink-0">arrow_forward</span>
                 </button>
               </div>
             </article>

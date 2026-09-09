@@ -131,22 +131,24 @@ export const WorkerDashboardPage = () => {
           {t('claimEscrowDesc')}
         </p>
 
-        <form onSubmit={handlePinSubmit} className="flex gap-2 pt-1">
-          <input
-            type="text"
-            maxLength={4}
-            placeholder="e.g. 7429"
-            value={pinInput}
-            onChange={(e) => setPinInput(e.target.value)}
-            className="w-36 h-12 text-center text-2xl font-black tracking-widest rounded-lg bg-surface-container-low border border-surface-variant text-on-surface focus:outline-none focus:ring-2 focus:ring-primary tabular-nums"
-          />
-          <button
-            type="submit"
-            className="flex-1 h-12 bg-primary text-white font-title-md font-bold rounded-lg flex items-center justify-center gap-1.5 shadow-sm active:bg-primary-container"
-          >
-            <span className="material-symbols-outlined text-[20px]">check_circle</span>
-            <span>{t('claimPayoutBtn')}</span>
-          </button>
+        <form onSubmit={handlePinSubmit} className="flex flex-col sm:flex-row gap-2 pt-1">
+          <div className="flex items-center gap-2 w-full">
+            <input
+              type="text"
+              maxLength={4}
+              placeholder="7429"
+              value={pinInput}
+              onChange={(e) => setPinInput(e.target.value)}
+              className="w-28 sm:w-36 h-12 text-center text-xl sm:text-2xl font-black tracking-widest rounded-xl bg-surface-container-low border border-surface-variant text-on-surface focus:outline-none focus:ring-2 focus:ring-primary tabular-nums shrink-0"
+            />
+            <button
+              type="submit"
+              className="flex-1 min-w-0 h-12 bg-primary text-white font-bold rounded-xl flex items-center justify-center gap-1.5 shadow-sm active:scale-95 transition-all text-xs sm:text-sm px-2"
+            >
+              <span className="material-symbols-outlined text-[18px] sm:text-[20px] shrink-0">check_circle</span>
+              <span className="truncate">{t('claimPayoutBtn')}</span>
+            </button>
+          </div>
         </form>
 
         {claimResult && (
@@ -277,14 +279,15 @@ export const WorkerDashboardPage = () => {
                   <button
                     type="button"
                     onClick={() => acceptIncomingJob(job.id)}
-                    className="flex-1 h-9 rounded bg-primary text-white font-label-sm font-bold text-xs shadow-xs"
+                    className="flex-1 h-10 rounded-lg bg-primary text-white font-bold text-xs shadow-xs active:scale-95 transition-all flex items-center justify-center gap-1"
                   >
-                    {t('acceptJob')}
+                    <span className="material-symbols-outlined text-[16px]">check</span>
+                    <span>{t('acceptJob')}</span>
                   </button>
                   <button
                     type="button"
                     onClick={() => declineIncomingJob(job.id)}
-                    className="px-3 h-9 rounded bg-surface-container-high text-on-surface font-label-sm font-bold text-xs"
+                    className="px-3.5 h-10 rounded-lg bg-surface-container-high text-on-surface font-bold text-xs active:scale-95 transition-all"
                   >
                     {t('declineJob')}
                   </button>
@@ -297,7 +300,7 @@ export const WorkerDashboardPage = () => {
 
       {/* DigiLocker & Identity Verification Card */}
       <section className="bg-surface-container-low rounded-xl p-space-md border border-surface-variant/40 flex flex-col gap-space-xs">
-        <div className="flex items-center justify-between">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
           <div className="flex items-center gap-2 text-primary">
             <span className="material-symbols-outlined text-[20px]">verified_user</span>
             <h3 className="font-title-md text-title-md font-bold text-on-surface">
