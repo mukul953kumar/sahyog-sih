@@ -58,32 +58,32 @@ export const Header = () => {
       <header className="fixed top-0 w-full z-50 pt-safe bg-surface-container-lowest/95 backdrop-blur-xl shadow-[0_1px_8px_rgba(0,0,0,0.04)] border-b border-surface-variant/40">
         <div className="max-w-2xl mx-auto h-16 px-3 sm:px-4 flex items-center justify-between gap-1.5">
           {/* Left: Back button or Logo + Title */}
-          <div className="flex items-center gap-1.5 shrink min-w-0">
+          <div className="flex items-center gap-1.5 shrink-0">
             {isDetailPage ? (
               <button
                 onClick={() => navigateTo(currentView === 'booking' ? 'worker-detail' : 'workers')}
-                className="w-9 h-9 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-colors shrink-0"
+                className="w-8 h-8 sm:w-9 sm:h-9 flex items-center justify-center rounded-lg text-on-surface hover:bg-surface-container active:bg-surface-container-high transition-colors shrink-0"
                 aria-label="Back"
               >
-                <span className="material-symbols-outlined text-[22px]">arrow_back</span>
+                <span className="material-symbols-outlined text-[20px] sm:text-[22px]">arrow_back</span>
               </button>
             ) : null}
 
-            {/* SAHYOG Brand Logo Mark */}
+            {/* SAHYOG Brand Logo Mark - ALWAYS FULLY VISIBLE */}
             <div
               onClick={() => navigateTo('home')}
-              className="flex items-center gap-1.5 cursor-pointer select-none min-w-0"
+              className="flex items-center gap-1.5 cursor-pointer select-none shrink-0"
             >
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary shadow-xs shrink-0">
                 <span className="material-symbols-outlined text-[19px] text-white material-symbols-fill">
                   handshake
                 </span>
               </div>
-              <div className="flex flex-col min-w-0">
-                <span className="font-headline-sm text-[16px] sm:text-headline-sm text-primary tracking-tight leading-none font-black truncate">
+              <div className="flex flex-col shrink-0">
+                <span className="text-[17px] sm:text-[19px] text-primary tracking-tight leading-none font-black whitespace-nowrap">
                   {cooperativeInfo.name}
                 </span>
-                <span className="text-[10px] sm:text-label-sm text-on-surface-variant leading-tight font-semibold truncate hidden xs:block">
+                <span className="text-[10px] text-on-surface-variant leading-tight font-semibold whitespace-nowrap hidden sm:block">
                   {getSubTitle()}
                 </span>
               </div>
@@ -96,13 +96,13 @@ export const Header = () => {
             <button
               type="button"
               onClick={() => setLocationModalOpen(true)}
-              className="flex items-center gap-0.5 sm:gap-1 bg-surface-container hover:bg-surface-container-high px-1.5 sm:px-2 py-1 rounded-lg border border-surface-variant/40 text-[11px] sm:text-xs font-bold text-on-surface transition-all group"
+              className="flex items-center gap-0.5 sm:gap-1 bg-surface-container hover:bg-surface-container-high px-1.5 sm:px-2 py-1 rounded-lg border border-surface-variant/40 text-[11px] sm:text-xs font-bold text-on-surface transition-all group shrink-0"
               title="Change City or Locality"
             >
-              <span className="material-symbols-outlined text-[15px] sm:text-[16px] text-primary material-symbols-fill group-hover:scale-110 transition-transform shrink-0">
+              <span className="material-symbols-outlined text-[14px] sm:text-[16px] text-primary material-symbols-fill group-hover:scale-110 transition-transform shrink-0">
                 location_on
               </span>
-              <span className="max-w-[55px] xs:max-w-[70px] sm:max-w-[100px] truncate">
+              <span className="max-w-[62px] sm:max-w-[100px] truncate">
                 {activeCityConfig?.name || cooperativeInfo.city}
               </span>
               <span className="material-symbols-outlined text-[11px] sm:text-[12px] text-outline shrink-0">
@@ -112,7 +112,7 @@ export const Header = () => {
 
             {/* Language Selector Dropdown */}
             <div className="flex items-center gap-0.5 bg-surface-container px-1.5 sm:px-2 py-1 rounded-lg border border-surface-variant/40 text-[11px] sm:text-xs font-bold text-on-surface shrink-0">
-              <span className="material-symbols-outlined text-[14px] sm:text-[15px] text-primary shrink-0">translate</span>
+              <span className="material-symbols-outlined text-[13px] sm:text-[15px] text-primary shrink-0">translate</span>
               <select
                 aria-label="Select Language"
                 value={language}
@@ -131,7 +131,7 @@ export const Header = () => {
             <div className="relative shrink-0">
               <button
                 onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                className={`min-h-[30px] sm:min-h-[34px] px-1.5 sm:px-2.5 py-1 flex items-center gap-0.5 sm:gap-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all ${
+                className={`min-h-[30px] sm:min-h-[34px] px-2 sm:px-2.5 py-1 flex items-center gap-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all shrink-0 ${
                   userRole === 'worker'
                     ? 'bg-primary-fixed text-on-primary-fixed border border-primary/30'
                     : userRole === 'admin'
@@ -147,7 +147,7 @@ export const Header = () => {
                     ? 'admin_panel_settings'
                     : 'person'}
                 </span>
-                <span className="max-w-[45px] xs:max-w-[65px] sm:max-w-[75px] truncate">
+                <span className="hidden sm:inline max-w-[75px] truncate">
                   {getRoleLabel().split(' ')[0]}
                 </span>
                 <span className="material-symbols-outlined text-[11px] sm:text-[12px] shrink-0">expand_more</span>
