@@ -55,29 +55,26 @@ export const Header = () => {
     }
   };
 
-  // Navigation Links for Desktop Top Bar
+  // Navigation Links for Desktop Top Bar (Clean, single-line, non-wrapping)
   const getDesktopNavLinks = () => {
     if (userRole === 'worker') {
       return [
         { id: 'worker-dashboard', label: 'Worker Hub', icon: 'engineering' },
         { id: 'bookings', label: 'Jobs & Payouts', icon: 'event_note', badge: activeEscrowBookings },
         { id: 'community', label: 'Guild Ledger', icon: 'diversity_3' },
-        { id: 'profile', label: 'My Profile', icon: 'person' },
       ];
     } else if (userRole === 'admin') {
       return [
         { id: 'admin-dashboard', label: 'Admin Console', icon: 'admin_panel_settings' },
         { id: 'bookings', label: 'Disputes & Escrow', icon: 'gavel', badge: activeEscrowBookings },
         { id: 'community', label: 'Resolutions', icon: 'diversity_3' },
-        { id: 'profile', label: 'My Profile', icon: 'person' },
       ];
     } else {
       return [
         { id: 'home', label: 'Home', icon: 'home' },
-        { id: 'workers', label: 'Find Services', icon: 'grid_view' },
-        { id: 'bookings', label: 'My Bookings', icon: 'event_note', badge: activeEscrowBookings },
+        { id: 'workers', label: 'Services', icon: 'grid_view' },
+        { id: 'bookings', label: 'Bookings', icon: 'event_note', badge: activeEscrowBookings },
         { id: 'community', label: 'Public Ledger', icon: 'diversity_3' },
-        { id: 'profile', label: 'My Profile', icon: 'person' },
       ];
     }
   };
@@ -144,7 +141,7 @@ export const Header = () => {
                     key={link.id}
                     type="button"
                     onClick={() => navigateTo(link.id)}
-                    className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                    className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold whitespace-nowrap transition-all ${
                       isActive
                         ? 'bg-primary text-white shadow-xs'
                         : 'text-on-surface-variant hover:text-on-surface hover:bg-surface-container'
