@@ -13,6 +13,8 @@ export const HomePage = () => {
     setVoiceSearchModalOpen,
     setLocationModalOpen,
     cooperativeInfo,
+    selectedLocality,
+    activeCityConfig,
   } = useApp();
 
   const handleSearchSubmit = (e) => {
@@ -49,20 +51,20 @@ export const HomePage = () => {
   };
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto px-layout-margin-mobile pb-space-2xl gap-space-lg">
-      {/* Search & Locality Quick Bar */}
-      <div className="flex flex-col gap-space-xs mt-space-sm">
+    <div className="flex flex-col w-full max-w-2xl mx-auto px-layout-margin-mobile pb-28 gap-4 sm:gap-5 animate-fade-in">
+      {/* 1. Search Bar with Integrated Voice Search */}
+      <div className="flex flex-col gap-2 mt-1">
         <form
           onSubmit={handleSearchSubmit}
-          className="relative flex items-center w-full bg-surface-container-low rounded-lg p-space-xs shadow-xs border border-surface-variant/40"
+          className="relative flex items-center w-full bg-surface-container-low rounded-2xl p-1.5 shadow-xs border border-surface-variant/40 transition-all focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface-container-lowest"
         >
-          <span className="material-symbols-outlined text-primary ml-space-xs text-[22px]">
+          <span className="material-symbols-outlined text-primary ml-2 text-[22px]">
             search
           </span>
           <input
-            className="w-full bg-transparent px-space-xs font-body-md text-body-md text-on-surface placeholder:text-outline focus:outline-none"
+            className="w-full bg-transparent px-2 text-xs sm:text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none"
             id="serviceSearchInput"
-            placeholder={t('searchPlaceholder')}
+            placeholder={t('searchPlaceholder') || 'Search electrician, plumber, AC repair...'}
             type="text"
             value={searchQuery}
             onChange={(e) => setSearchQuery(e.target.value)}
@@ -80,306 +82,226 @@ export const HomePage = () => {
             <button
               type="button"
               onClick={() => setVoiceSearchModalOpen(true)}
-              className="p-1.5 rounded-full hover:bg-primary/10 text-primary flex items-center justify-center mr-1 transition-colors"
-              title="बोलकर खोजें (Speak to Search)"
+              className="p-2 rounded-xl bg-primary/10 hover:bg-primary/20 text-primary flex items-center justify-center mr-0.5 transition-colors"
+              title="Voice Search"
               aria-label="Voice Search"
             >
-              <span className="material-symbols-outlined text-[22px] text-primary material-symbols-fill">
+              <span className="material-symbols-outlined text-[20px] text-primary material-symbols-fill">
                 mic
               </span>
             </button>
           )}
         </form>
 
-        {/* Bharat AI Voice Assistant Card - Fully Localized */}
-        <div className="bg-gradient-to-r from-emerald-950 via-primary to-emerald-900 text-white rounded-xl p-3 sm:p-3.5 shadow-xs flex items-center justify-between gap-2.5 border border-emerald-700/40 mt-1">
-          <div className="flex items-center gap-2.5 min-w-0">
-            <div className="w-10 h-10 rounded-full bg-amber-400 text-emerald-950 flex items-center justify-center shrink-0 font-black shadow-xs">
-              <span className="material-symbols-outlined text-[24px] material-symbols-fill">mic</span>
-            </div>
-            <div className="flex flex-col min-w-0">
-              <div className="flex items-center gap-1.5">
-                <span className="text-xs font-black text-amber-300 tracking-wide truncate">
-                  {t('voiceBannerTitle')}
-                </span>
-              </div>
-              <p className="text-[11px] text-emerald-100 leading-snug mt-0.5 line-clamp-2">
-                {t('voiceBannerDesc')}
-              </p>
-            </div>
-          </div>
-          <button
-            type="button"
-            onClick={() => setVoiceSearchModalOpen(true)}
-            className="px-3 py-2 bg-amber-400 hover:bg-amber-300 active:scale-95 text-emerald-950 rounded-lg font-black text-xs shrink-0 shadow-xs flex items-center gap-1 transition-all"
-            title={t('voiceSearchBtn')}
-          >
-            <span className="material-symbols-outlined text-[16px]">mic</span>
-            <span className="hidden xs:inline">{t('voiceSearchBtn')}</span>
-          </button>
-        </div>
-
-        {/* Interactive Location Indicator & Quick Switcher */}
-        <div className="flex items-center justify-between px-space-xxs mt-1 bg-surface-container-low/80 rounded-xl p-2.5 border border-surface-variant/40 shadow-2xs gap-2">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="material-symbols-outlined text-primary text-[20px] shrink-0 material-symbols-fill">
+        {/* Compact Location Ribbon */}
+        <div className="flex items-center justify-between px-2.5 py-1.5 bg-surface-container-lowest rounded-xl border border-surface-variant/30 text-xs shadow-2xs">
+          <div className="flex items-center gap-1.5 min-w-0">
+            <span className="material-symbols-outlined text-primary text-[17px] shrink-0 material-symbols-fill">
               location_on
             </span>
-            <div className="flex flex-col min-w-0">
-              <span className="font-label-md text-label-md text-on-surface font-bold truncate">
-                {cooperativeInfo.area}
-              </span>
-              <span className="text-[11px] text-primary font-semibold truncate">
-                {cooperativeInfo.fullName} • {cooperativeInfo.ward}
-              </span>
-            </div>
+            <span className="font-bold text-on-surface truncate">
+              {selectedLocality || cooperativeInfo.area}, {activeCityConfig?.name}
+            </span>
           </div>
           <button
             type="button"
             onClick={() => setLocationModalOpen(true)}
-            className="font-label-sm text-label-sm text-primary font-black bg-primary-fixed/50 hover:bg-primary-fixed active:scale-95 px-2.5 sm:px-3 py-1.5 rounded-lg transition-all flex items-center gap-1 shrink-0 shadow-xs border border-primary/20"
+            className="text-[11px] font-bold text-primary hover:underline shrink-0 ml-2 flex items-center gap-0.5"
           >
-            <span className="material-symbols-outlined text-[14px]">edit_location</span>
-            <span>{t('changeLocation') || 'बदलें'}</span>
+            <span>Change</span>
+            <span className="material-symbols-outlined text-[13px]">expand_more</span>
           </button>
         </div>
       </div>
 
-      {/* Trust Hero Card */}
-      <div className="bg-surface-container-low rounded-xl p-space-md shadow-xs border border-surface-variant/30 flex flex-col gap-space-md">
-        <div className="flex items-center justify-between flex-wrap gap-2">
-          <div className="inline-flex items-center gap-1.5 bg-secondary-container text-on-secondary-container px-2.5 py-1 rounded-md">
-            <span className="material-symbols-outlined text-[16px] material-symbols-fill text-secondary">
-              verified
-            </span>
-            <span className="font-label-sm text-label-sm uppercase tracking-wider font-bold">
-              {t('heroBadge')}
-            </span>
-          </div>
-          <span className="font-label-sm text-label-sm text-on-surface-variant">
+      {/* 2. Sleek Modern Hero Banner */}
+      <div className="bg-gradient-to-br from-primary/10 via-surface-container-lowest to-secondary/10 rounded-2xl p-4 sm:p-5 border border-primary/20 shadow-xs flex flex-col gap-3">
+        <div className="flex items-center justify-between gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-black">
+            <span className="material-symbols-outlined text-[13px]">verified</span>
+            <span>{t('heroBadge')}</span>
+          </span>
+          <span className="text-[11px] text-on-surface-variant font-medium">
             {t('heroReg')}
           </span>
         </div>
 
-        <div className="flex flex-col gap-1.5">
-          <h1 className="font-headline-lg-mobile text-headline-lg-mobile text-on-surface tracking-tight leading-tight font-extrabold">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl sm:text-2xl font-black text-on-surface tracking-tight leading-snug">
             {t('heroTitle')}
           </h1>
-          <p className="font-body-md text-body-md text-on-surface-variant">
+          <p className="text-xs text-on-surface-variant leading-relaxed">
             {t('heroDesc')}
           </p>
         </div>
 
-        {/* Trust Checklist Pill Box */}
-        <div className="grid grid-cols-2 gap-2 pt-1">
-          <div className="flex items-center gap-1.5 bg-surface-container-lowest p-2 rounded-lg border border-surface-variant/20">
-            <span className="material-symbols-outlined text-primary text-[18px]">check_circle</span>
-            <span className="font-label-md text-label-md text-on-surface font-medium">
-              {t('chkVerified')}
-            </span>
+        {/* 3 Value Pillars */}
+        <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+          <div className="bg-surface-container-lowest p-2 rounded-xl border border-surface-variant/30 flex flex-col items-center gap-0.5 shadow-2xs">
+            <span className="material-symbols-outlined text-emerald-600 text-[18px]">currency_rupee</span>
+            <span className="text-[11px] font-black text-on-surface">₹0 Commission</span>
+            <span className="text-[9px] text-on-surface-variant">100% to Worker</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-surface-container-lowest p-2 rounded-lg border border-surface-variant/20">
+          <div className="bg-surface-container-lowest p-2 rounded-xl border border-surface-variant/30 flex flex-col items-center gap-0.5 shadow-2xs">
             <span className="material-symbols-outlined text-primary text-[18px]">lock</span>
-            <span className="font-label-md text-label-md text-on-surface font-medium">
-              {t('chkEscrow')}
-            </span>
+            <span className="text-[11px] font-black text-on-surface">Escrow Safe</span>
+            <span className="text-[9px] text-on-surface-variant">4-Digit PIN Release</span>
           </div>
-          <div className="flex items-center gap-1.5 bg-surface-container-lowest p-2 rounded-lg border border-surface-variant/20">
-            <span className="material-symbols-outlined text-primary text-[18px]">currency_rupee</span>
-            <span className="font-label-md text-label-md text-on-surface font-medium">
-              {t('chkZeroComm')}
-            </span>
-          </div>
-          <div className="flex items-center gap-1.5 bg-surface-container-lowest p-2 rounded-lg border border-surface-variant/20">
-            <span className="material-symbols-outlined text-primary text-[18px]">pin</span>
-            <span className="font-label-md text-label-md text-on-surface font-medium">
-              {t('chkOtpRelease')}
-            </span>
+          <div className="bg-surface-container-lowest p-2 rounded-xl border border-surface-variant/30 flex flex-col items-center gap-0.5 shadow-2xs">
+            <span className="material-symbols-outlined text-amber-600 text-[18px]">verified_user</span>
+            <span className="text-[11px] font-black text-on-surface">Skill Verified</span>
+            <span className="text-[9px] text-on-surface-variant">Live Practical Test</span>
           </div>
         </div>
 
         {/* Action Buttons */}
-        <div className="flex flex-col gap-2.5 pt-1">
+        <div className="grid grid-cols-2 gap-2 pt-1">
           <button
-            className="w-full h-12 bg-primary text-on-primary font-title-md text-title-md font-bold rounded-lg flex items-center justify-center gap-2 active:bg-primary-container transition-colors shadow-sm"
+            className="h-11 bg-primary text-on-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 active:bg-primary-container transition-all shadow-sm"
             onClick={() => navigateTo('workers')}
             type="button"
           >
             <span>{t('findServiceBtn')}</span>
-            <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
+            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
           </button>
           <button
-            className="w-full h-12 bg-surface-container-lowest text-primary font-title-md text-title-md font-bold rounded-lg flex items-center justify-center gap-2 active:bg-surface-container-high transition-colors border border-primary/20 shadow-xs"
+            className="h-11 bg-surface-container-lowest text-primary font-bold text-xs rounded-xl flex items-center justify-center gap-1.5 active:bg-surface-container-high transition-all border border-primary/30 shadow-2xs"
             onClick={() => navigateTo('register')}
             type="button"
           >
-            <span className="material-symbols-outlined text-[20px]">badge</span>
+            <span className="material-symbols-outlined text-[16px]">engineering</span>
             <span>{t('joinWorkerBtn')}</span>
           </button>
         </div>
       </div>
 
-      {/* Urgent Service Banner */}
-      <div className="bg-tertiary-fixed text-on-tertiary-fixed p-space-md rounded-xl flex flex-col gap-space-xs shadow-sm border border-tertiary/20">
-        <div className="flex items-center justify-between">
-          <div className="flex items-center gap-1.5 font-title-md text-title-md font-bold text-tertiary">
-            <span
-              className="material-symbols-outlined text-[22px] text-tertiary material-symbols-fill"
-            >
+      {/* 3. Compact Urgent Service Banner */}
+      <div className="bg-tertiary-fixed text-on-tertiary-fixed p-3 sm:p-3.5 rounded-2xl flex items-center justify-between gap-3 shadow-xs border border-tertiary/20">
+        <div className="flex items-center gap-2.5 min-w-0">
+          <div className="w-10 h-10 rounded-xl bg-tertiary text-on-tertiary flex items-center justify-center shrink-0 shadow-xs">
+            <span className="material-symbols-outlined text-[22px] material-symbols-fill">
               emergency_home
             </span>
-            <span>{t('emergencyTitle')}</span>
           </div>
-          <span className="bg-tertiary-container text-on-tertiary-container px-2.5 py-0.5 rounded-full font-label-sm text-label-sm font-bold">
-            {t('emergencyEta')}
-          </span>
+          <div className="flex flex-col min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="text-xs font-black text-tertiary truncate">
+                {t('emergencyTitle')}
+              </span>
+              <span className="bg-tertiary-container text-on-tertiary-container px-2 py-0.2 rounded-full text-[9px] font-extrabold">
+                {t('emergencyEta')}
+              </span>
+            </div>
+            <p className="text-[11px] text-on-tertiary-fixed-variant truncate mt-0.5">
+              Power trip, pipe burst or lock repair? Dispatch immediate on-duty technician.
+            </p>
+          </div>
         </div>
-        <p className="font-body-sm text-body-sm text-on-tertiary-fixed-variant leading-snug">
-          {t('emergencyDesc')}
-        </p>
-        <div className="pt-2">
-          <button
-            className="w-full h-11 bg-tertiary text-on-tertiary font-title-md text-title-md font-bold rounded-lg flex items-center justify-center gap-2 active:bg-tertiary-container shadow-sm transition-all"
-            id="emergencyBtn"
-            type="button"
-            onClick={() => setEmergencyModalOpen(true)}
-          >
-            <span className="material-symbols-outlined text-[20px]">bolt</span>
-            <span>{t('requestEmergencyBtn')}</span>
-          </button>
-        </div>
+        <button
+          className="px-3.5 py-2 bg-tertiary text-on-tertiary font-bold text-xs rounded-xl shrink-0 shadow-xs flex items-center gap-1 hover:bg-tertiary-container active:scale-95 transition-all"
+          id="emergencyBtn"
+          type="button"
+          onClick={() => setEmergencyModalOpen(true)}
+        >
+          <span>Request</span>
+          <span className="material-symbols-outlined text-[15px]">bolt</span>
+        </button>
       </div>
 
-      {/* Service Categories Grid Section */}
-      <div className="flex flex-col gap-space-sm" id="categoriesGrid">
+      {/* 4. Service Categories Grid */}
+      <div className="flex flex-col gap-2.5" id="categoriesGrid">
         <div className="flex items-center justify-between">
           <div>
-            <h2 className="font-headline-sm text-headline-sm text-on-surface font-extrabold">
+            <h2 className="text-sm sm:text-base font-black text-on-surface">
               {t('categoriesTitle')}
             </h2>
-            <p className="font-body-sm text-body-sm text-on-surface-variant">
+            <p className="text-[11px] text-on-surface-variant">
               {t('categoriesSub')}
             </p>
           </div>
-          <span className="font-label-sm text-label-sm text-primary font-bold bg-primary-fixed/30 px-2 py-1 rounded">
+          <span className="text-[11px] font-bold text-primary bg-primary/10 px-2 py-0.5 rounded-lg">
             {t('tradesCount')}
           </span>
         </div>
 
-        <div className="grid grid-cols-2 gap-space-xs">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
           {categories.map((cat) => (
             <div
               key={cat.id}
               onClick={() => handleCategoryClick(cat.id)}
-              className="category-card bg-surface-container-low rounded-xl p-3.5 flex flex-col gap-2 cursor-pointer hover:bg-surface-container transition-all active:scale-[0.98] border border-surface-variant/40 shadow-xs"
+              className="bg-surface-container-low rounded-xl p-3 flex flex-col gap-1.5 cursor-pointer hover:bg-surface-container-lowest hover:border-primary/40 border border-surface-variant/30 shadow-2xs transition-all active:scale-[0.98]"
             >
-              <div className="w-10 h-10 rounded-lg bg-primary-fixed text-primary flex items-center justify-center">
-                <span className="material-symbols-outlined text-[24px]">{cat.icon}</span>
+              <div className="w-8 h-8 rounded-lg bg-primary/10 text-primary flex items-center justify-center">
+                <span className="material-symbols-outlined text-[20px]">{cat.icon}</span>
               </div>
-              <div>
-                <div className="font-title-md text-title-md text-on-surface font-bold">
+              <div className="flex flex-col">
+                <span className="text-xs font-bold text-on-surface line-clamp-1">
                   {getCategoryName(cat)}
-                </div>
-                <div className="font-body-sm text-body-sm text-on-surface-variant line-clamp-1">
+                </span>
+                <span className="text-[10px] text-on-surface-variant line-clamp-1">
                   {cat.desc}
-                </div>
+                </span>
               </div>
-              <div className="flex items-center justify-between pt-1 font-label-sm text-label-sm text-secondary font-semibold">
+              <div className="flex items-center justify-between text-[11px] text-secondary font-bold pt-1 mt-auto border-t border-surface-variant/20">
                 <span>{t('fromPrice')} ₹{cat.startingPrice}</span>
-                <span className="material-symbols-outlined text-[16px]">chevron_right</span>
+                <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* How SAHYOG Operates */}
-      <div className="bg-surface-container-lowest rounded-xl p-space-md border border-surface-variant/40 shadow-xs flex flex-col gap-space-md">
+      {/* 5. How SAHYOG Operates (Concise 4-Step Flow) */}
+      <div className="bg-surface-container-lowest rounded-2xl p-4 border border-surface-variant/30 shadow-2xs flex flex-col gap-3">
         <div>
-          <span className="font-label-sm text-label-sm text-primary font-bold uppercase tracking-wider">
-            Fair & Transparent
+          <span className="text-[10px] font-black text-primary uppercase tracking-wider">
+            Fair & Democratic Cooperative
           </span>
-          <h3 className="font-headline-sm text-headline-sm text-on-surface font-extrabold mt-0.5">
-            How SAHYOG Operates
+          <h3 className="text-sm font-black text-on-surface">
+            How SAHYOG Works in 4 Simple Steps
           </h3>
-          <p className="font-body-sm text-body-sm text-on-surface-variant">
-            Simple 4-step workflow that protects both customer and technician
-          </p>
         </div>
 
-        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-          <div className="flex items-start gap-3 p-2.5 bg-surface-container-low rounded-lg">
-            <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
+          <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-variant/30 flex flex-col gap-1">
+            <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
               1
             </span>
-            <div>
-              <h4 className="font-title-md text-[15px] font-bold text-on-surface">Direct Match</h4>
-              <p className="font-body-sm text-[13px] text-on-surface-variant">
-                Select your trade and connect with verified guild members nearby.
-              </p>
-            </div>
+            <span className="font-bold text-on-surface">Direct Match</span>
+            <span className="text-[10px] text-on-surface-variant leading-tight">
+              Select verified local guild technicians nearby.
+            </span>
           </div>
 
-          <div className="flex items-start gap-3 p-2.5 bg-surface-container-low rounded-lg">
-            <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
+          <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-variant/30 flex flex-col gap-1">
+            <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
               2
             </span>
-            <div>
-              <h4 className="font-title-md text-[15px] font-bold text-on-surface">Upfront Safe Escrow</h4>
-              <p className="font-body-sm text-[13px] text-on-surface-variant">
-                Agree on fair price and hold payment securely in RBI-supervised escrow.
-              </p>
-            </div>
+            <span className="font-bold text-on-surface">Safe Escrow</span>
+            <span className="text-[10px] text-on-surface-variant leading-tight">
+              Payment held securely in RBI-compliant escrow.
+            </span>
           </div>
 
-          <div className="flex items-start gap-3 p-2.5 bg-surface-container-low rounded-lg">
-            <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
+          <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-variant/30 flex flex-col gap-1">
+            <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
               3
             </span>
-            <div>
-              <h4 className="font-title-md text-[15px] font-bold text-on-surface">Verified Delivery</h4>
-              <p className="font-body-sm text-[13px] text-on-surface-variant">
-                Technician arrives on time, performs the repair, and cleans up the site.
-              </p>
-            </div>
+            <span className="font-bold text-on-surface">Live Repair</span>
+            <span className="text-[10px] text-on-surface-variant leading-tight">
+              Technician performs quality repair on time.
+            </span>
           </div>
 
-          <div className="flex items-start gap-3 p-2.5 bg-surface-container-low rounded-lg">
-            <span className="w-7 h-7 rounded-full bg-primary text-white flex items-center justify-center font-bold text-sm shrink-0">
+          <div className="p-2.5 rounded-xl bg-surface-container-low border border-surface-variant/30 flex flex-col gap-1">
+            <span className="w-6 h-6 rounded-full bg-primary text-white flex items-center justify-center font-bold text-xs">
               4
             </span>
-            <div>
-              <h4 className="font-title-md text-[15px] font-bold text-on-surface">4-Digit OTP Release</h4>
-              <p className="font-body-sm text-[13px] text-on-surface-variant">
-                Release your secret PIN to release funds only when completely satisfied.
-              </p>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      {/* Know Who You're Hiring / Zero Commission Comparison */}
-      <div className="bg-surface-container-low rounded-xl p-space-md border border-surface-variant/40 flex flex-col gap-space-sm">
-        <div className="flex items-center gap-2">
-          <span className="material-symbols-outlined text-[24px] text-primary">verified_user</span>
-          <h3 className="font-headline-sm text-headline-sm text-on-surface font-extrabold">
-            Know Who You're Hiring
-          </h3>
-        </div>
-        <p className="font-body-md text-body-md text-on-surface-variant">
-          SAHYOG verifies through national public digital identity stacks (e-Shram, Aadhaar & DigiLocker) before granting cooperative service licenses.
-        </p>
-
-        <div className="p-3 bg-secondary-container/40 rounded-lg border border-secondary/20 flex items-center justify-between">
-          <div className="flex flex-col">
-            <span className="font-label-md text-label-md text-on-secondary-container font-extrabold">
-              0% Platform Commission
-            </span>
-            <span className="font-body-sm text-body-sm text-on-surface-variant">
-              Traditional apps cut 20%-35%. Under SAHYOG, 100% goes directly to the technician family.
+            <span className="font-bold text-on-surface">4-Digit PIN</span>
+            <span className="text-[10px] text-on-surface-variant leading-tight">
+              Share your secret PIN to release funds after satisfaction.
             </span>
           </div>
-          <span className="text-2xl font-black text-secondary shrink-0 ml-2">100%</span>
         </div>
       </div>
     </div>

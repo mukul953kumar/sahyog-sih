@@ -14,7 +14,7 @@ export const BottomNav = () => {
       { id: 'home', label: t('navHome'), icon: 'home' },
       { id: 'bookings', label: t('navBookings'), icon: 'event_note', badge: activeEscrowBookings },
       { id: 'community', label: t('navCommunity'), icon: 'diversity_3' },
-      { id: 'login', label: t('navProfile'), icon: 'person' },
+      { id: 'profile', label: t('navProfile'), icon: 'person' },
     ];
   } else if (userRole === 'admin') {
     tabs = [
@@ -22,7 +22,7 @@ export const BottomNav = () => {
       { id: 'home', label: t('navHome'), icon: 'home' },
       { id: 'bookings', label: t('navBookings'), icon: 'event_note', badge: activeEscrowBookings },
       { id: 'community', label: t('navCommunity'), icon: 'diversity_3' },
-      { id: 'login', label: t('navProfile'), icon: 'person' },
+      { id: 'profile', label: t('navProfile'), icon: 'person' },
     ];
   } else {
     tabs = [
@@ -30,7 +30,7 @@ export const BottomNav = () => {
       { id: 'workers', label: t('navServices'), icon: 'grid_view' },
       { id: 'bookings', label: t('navBookings'), icon: 'event_note', badge: activeEscrowBookings },
       { id: 'community', label: t('navCommunity'), icon: 'diversity_3' },
-      { id: 'login', label: t('navProfile'), icon: 'person' },
+      { id: 'profile', label: t('navProfile'), icon: 'person' },
     ];
   }
 

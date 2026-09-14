@@ -11,6 +11,8 @@ export const Header = () => {
     userRole,
     switchRole,
     currentUser,
+    isAuthenticated,
+    handleLogout,
     cooperativeInfo,
     activeCityConfig,
     setLocationModalOpen,
@@ -19,6 +21,7 @@ export const Header = () => {
   const [roleMenuOpen, setRoleMenuOpen] = useState(false);
 
   const isDetailPage = currentView === 'worker-detail' || currentView === 'booking';
+  const isAuthScreen = currentView === 'login' || currentView === 'register';
 
   const getSubTitle = () => {
     switch (currentView) {
@@ -38,8 +41,10 @@ export const Header = () => {
         return t('navWorkerDash');
       case 'admin-dashboard':
         return t('navAdminDash');
-      case 'login':
+      case 'profile':
         return t('navProfile');
+      case 'login':
+        return 'Demo Login';
       case 'register':
         return 'Register';
       default:
@@ -71,7 +76,15 @@ export const Header = () => {
 
             {/* SAHYOG Brand Logo Mark - ALWAYS FULLY VISIBLE */}
             <div
-              onClick={() => navigateTo('home')}
+              onClick={() => {
+                if (isAuthenticated) {
+                  if (userRole === 'worker') navigateTo('worker-dashboard');
+                  else if (userRole === 'admin') navigateTo('admin-dashboard');
+                  else navigateTo('home');
+                } else {
+                  navigateTo('login');
+                }
+              }}
               className="flex items-center gap-1.5 cursor-pointer select-none shrink-0"
             >
               <div className="w-8 h-8 rounded-lg bg-primary flex items-center justify-center text-on-primary shadow-xs shrink-0">
@@ -90,7 +103,7 @@ export const Header = () => {
             </div>
           </div>
 
-          {/* Right Action Group: Location + Language + Role Switcher */}
+          {/* Right Action Group: Location + Language + Role Switcher / Profile */}
           <div className="flex items-center gap-1 sm:gap-1.5 shrink-0">
             {/* Quick Location Badge & Selector */}
             <button
@@ -127,77 +140,112 @@ export const Header = () => {
               </select>
             </div>
 
-            {/* Role Switcher Badge Button */}
-            <div className="relative shrink-0">
-              <button
-                onClick={() => setRoleMenuOpen(!roleMenuOpen)}
-                className={`min-h-[30px] sm:min-h-[34px] px-2 sm:px-2.5 py-1 flex items-center gap-1 rounded-lg text-[11px] sm:text-xs font-bold transition-all shrink-0 ${
-                  userRole === 'worker'
-                    ? 'bg-primary-fixed text-on-primary-fixed border border-primary/30'
-                    : userRole === 'admin'
-                    ? 'bg-secondary-container text-on-secondary-container border border-secondary/30'
-                    : 'bg-surface-container-high text-on-surface border border-surface-variant/50'
-                }`}
-                title="Switch between Customer, Worker-Owner, or Admin"
-              >
-                <span className="material-symbols-outlined text-[15px] sm:text-[16px] shrink-0">
-                  {userRole === 'worker'
-                    ? 'handyman'
-                    : userRole === 'admin'
-                    ? 'admin_panel_settings'
-                    : 'person'}
-                </span>
-                <span className="hidden sm:inline max-w-[75px] truncate">
-                  {getRoleLabel().split(' ')[0]}
-                </span>
-                <span className="material-symbols-outlined text-[11px] sm:text-[12px] shrink-0">expand_more</span>
-              </button>
+            {/* If Logged In: Role / Profile Badge with Dropdown */}
+            {isAuthenticated ? (
+              <div className="relative shrink-0">
+                <button
+                  onClick={() => setRoleMenuOpen(!roleMenuOpen)}
+                  className={`min-h-[30px] sm:min-h-[34px] px-2 sm:px-2.5 py-1 flex items-center gap-1.5 rounded-lg text-[11px] sm:text-xs font-bold transition-all shrink-0 ${
+                    userRole === 'worker'
+                      ? 'bg-amber-100 text-amber-900 border border-amber-300'
+                      : userRole === 'admin'
+                      ? 'bg-indigo-100 text-indigo-900 border border-indigo-300'
+                      : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                  }`}
+                  title="Switch between Customer, Worker-Owner, Admin or View Profile"
+                >
+                  <img
+                    src={currentUser?.avatar}
+                    alt={currentUser?.name}
+                    className="w-4 h-4 sm:w-4.5 sm:h-4.5 rounded-full object-cover shrink-0"
+                  />
+                  <span className="hidden sm:inline max-w-[75px] truncate">
+                    {currentUser?.name?.split(' ')[0] || getRoleLabel().split(' ')[0]}
+                  </span>
+                  <span className="material-symbols-outlined text-[11px] sm:text-[12px] shrink-0">expand_more</span>
+                </button>
 
-              {/* Role Dropdown Menu */}
-              {roleMenuOpen && (
-                <div className="absolute right-0 top-10 mt-1 w-48 bg-white rounded-xl shadow-xl border border-surface-variant/60 py-1.5 z-50 animate-fade-in text-on-surface text-xs font-medium">
-                  <div className="px-3 py-1 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-variant/30">
-                    Switch App Role
+                {/* Role & Profile Dropdown Menu */}
+                {roleMenuOpen && (
+                  <div className="absolute right-0 top-10 mt-1 w-52 bg-white rounded-xl shadow-xl border border-surface-variant/60 py-1.5 z-50 animate-fade-in text-on-surface text-xs font-medium">
+                    <div className="px-3 py-1 text-[11px] font-bold text-on-surface-variant uppercase tracking-wider border-b border-surface-variant/30">
+                      Switch Demo Role
+                    </div>
+                    <button
+                      onClick={() => {
+                        switchRole('customer');
+                        setRoleMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-container-low transition-colors ${
+                        userRole === 'customer' ? 'font-bold text-emerald-800 bg-emerald-50' : ''
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px] text-emerald-600">person</span>
+                      <span>Customer (Priya)</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchRole('worker');
+                        setRoleMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-container-low transition-colors ${
+                        userRole === 'worker' ? 'font-bold text-amber-800 bg-amber-50' : ''
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px] text-amber-600">handyman</span>
+                      <span>Worker (Awadhesh)</span>
+                    </button>
+                    <button
+                      onClick={() => {
+                        switchRole('admin');
+                        setRoleMenuOpen(false);
+                      }}
+                      className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-container-low transition-colors ${
+                        userRole === 'admin' ? 'font-bold text-indigo-800 bg-indigo-50' : ''
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-[18px] text-indigo-600">admin_panel_settings</span>
+                      <span>Admin (Dr. Varma)</span>
+                    </button>
+
+                    <div className="border-t border-surface-variant/30 my-1"></div>
+
+                    {/* Go to Profile */}
+                    <button
+                      onClick={() => {
+                        navigateTo('profile');
+                        setRoleMenuOpen(false);
+                      }}
+                      className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-container-low text-primary font-bold transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">account_circle</span>
+                      <span>View Demo Profile</span>
+                    </button>
+
+                    {/* Logout */}
+                    <button
+                      onClick={() => {
+                        setRoleMenuOpen(false);
+                        handleLogout();
+                      }}
+                      className="w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-red-50 text-red-600 font-bold transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-[18px]">logout</span>
+                      <span>{language === 'hi' ? 'लॉगआउट' : 'Logout'}</span>
+                    </button>
                   </div>
-                  <button
-                    onClick={() => {
-                      switchRole('customer');
-                      setRoleMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-container-low transition-colors ${
-                      userRole === 'customer' ? 'font-bold text-primary bg-primary-fixed/20' : ''
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">home</span>
-                    <span>{t('roleCustomer')}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      switchRole('worker');
-                      setRoleMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-container-low transition-colors ${
-                      userRole === 'worker' ? 'font-bold text-primary bg-primary-fixed/20' : ''
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">handyman</span>
-                    <span>{t('roleWorker')}</span>
-                  </button>
-                  <button
-                    onClick={() => {
-                      switchRole('admin');
-                      setRoleMenuOpen(false);
-                    }}
-                    className={`w-full text-left px-3 py-2 flex items-center gap-2 hover:bg-surface-container-low transition-colors ${
-                      userRole === 'admin' ? 'font-bold text-secondary bg-secondary-container/40' : ''
-                    }`}
-                  >
-                    <span className="material-symbols-outlined text-[18px]">admin_panel_settings</span>
-                    <span>{t('roleAdmin')}</span>
-                  </button>
-                </div>
-              )}
-            </div>
+                )}
+              </div>
+            ) : (
+              <button
+                type="button"
+                onClick={() => navigateTo('login')}
+                className="min-h-[30px] sm:min-h-[34px] px-2.5 sm:px-3 py-1 flex items-center gap-1 bg-primary text-on-primary rounded-lg text-xs font-bold hover:bg-primary-container transition-all shadow-xs shrink-0"
+              >
+                <span className="material-symbols-outlined text-[15px]">login</span>
+                <span>Demo Login</span>
+              </button>
+            )}
           </div>
         </div>
       </header>

@@ -21,11 +21,14 @@ import { BookingsPage } from './pages/BookingsPage';
 import { CommunityPage } from './pages/CommunityPage';
 import { LoginPage } from './pages/LoginPage';
 import { RegisterPage } from './pages/RegisterPage';
+import { ProfilePage } from './pages/ProfilePage';
 import { WorkerDashboardPage } from './pages/WorkerDashboardPage';
 import { AdminDashboardPage } from './pages/AdminDashboardPage';
 
 const AppContent = () => {
-  const { currentView } = useApp();
+  const { currentView, isAuthenticated } = useApp();
+
+  const isAuthScreen = currentView === 'login' || currentView === 'register';
 
   const renderCurrentView = () => {
     switch (currentView) {
@@ -45,6 +48,8 @@ const AppContent = () => {
         return <WorkerDashboardPage />;
       case 'admin-dashboard':
         return <AdminDashboardPage />;
+      case 'profile':
+        return <ProfilePage />;
       case 'login':
         return <LoginPage />;
       case 'register':
@@ -57,11 +62,11 @@ const AppContent = () => {
   return (
     <div className="bg-surface-container-lowest text-on-surface flex flex-col min-h-screen overflow-x-hidden">
       <Header />
-      <main className="flex-1 flex flex-col relative w-full pt-16 pb-24 sm:pb-28 bg-surface-container-lowest overflow-x-hidden">
+      <main className={`flex-1 flex flex-col relative w-full pt-16 ${isAuthScreen ? 'pb-8' : 'pb-24 sm:pb-28'} bg-surface-container-lowest overflow-x-hidden`}>
         {renderCurrentView()}
       </main>
-      <BottomNav />
-      <FloatingVoiceButton />
+      {!isAuthScreen && <BottomNav />}
+      {!isAuthScreen && <FloatingVoiceButton />}
       
       {/* Interactive Global Modals */}
       <EmergencyModal />

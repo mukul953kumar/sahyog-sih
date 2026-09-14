@@ -23,32 +23,23 @@ export const WorkersPage = () => {
     setLocationModalOpen,
     updateLocation,
     supportedCities,
+    setSkillAssessmentModalWorker,
   } = useApp();
 
   const [cityFilter, setCityFilter] = useState(selectedCity || 'sultanpur');
-  const [activeLocalityFilter, setActiveLocalityFilter] = useState('all');
 
-  // Keep cityFilter in sync with global context
+  // Sync city filter with global selectedCity
   React.useEffect(() => {
     if (selectedCity) {
       setCityFilter(selectedCity);
-      setActiveLocalityFilter('all');
     }
   }, [selectedCity]);
 
-  // Filter workers based on city, locality, category, search, and availability
+  // Filter workers based on city, category, search, and availability
   const filteredWorkers = workers.filter((worker) => {
-    // City filter
     const matchesCity =
       cityFilter === 'all' ||
       (worker.city && worker.city.toLowerCase() === cityFilter.toLowerCase());
-
-    // Locality filter
-    const matchesLocality =
-      activeLocalityFilter === 'all' ||
-      (worker.area && worker.area.toLowerCase().includes(activeLocalityFilter.toLowerCase())) ||
-      (worker.coverageArea &&
-        worker.coverageArea.toLowerCase().includes(activeLocalityFilter.toLowerCase()));
 
     const matchesCategory =
       selectedCategory === 'all' ||
@@ -66,13 +57,7 @@ export const WorkersPage = () => {
 
     const matchesAvailability = !availableOnly || worker.availableNow;
 
-    return (
-      matchesCity &&
-      matchesLocality &&
-      matchesCategory &&
-      matchesSearch &&
-      matchesAvailability
-    );
+    return matchesCity && matchesCategory && matchesSearch && matchesAvailability;
   });
 
   // Sort workers
@@ -87,164 +72,74 @@ export const WorkersPage = () => {
     navigateTo('worker-detail', { workerId });
   };
 
-  const handleCityTabClick = (cityId) => {
-    setCityFilter(cityId);
-    setActiveLocalityFilter('all');
-    if (cityId !== 'all') {
-      const targetCity = supportedCities.find((c) => c.id === cityId);
-      if (targetCity) {
-        updateLocation(cityId, targetCity.defaultLocality);
-      }
-    }
-  };
-
   const categories = [
-    { id: 'all', label: 'All' },
-    { id: 'electrical', label: t('catElectrical') },
-    { id: 'plumbing', label: t('catPlumbing') },
-    { id: 'ac', label: t('catAc') },
-    { id: 'carpentry', label: t('catCarpentry') },
-    { id: 'cleaning', label: t('catCleaning') },
-    { id: 'emergency', label: 'Emergency', isEmergency: true },
+    { id: 'all', label: 'All', icon: 'apps' },
+    { id: 'electrical', label: t('catElectrical') || 'Electrician', icon: 'bolt' },
+    { id: 'plumbing', label: t('catPlumbing') || 'Plumbing', icon: 'faucet' },
+    { id: 'ac', label: t('catAc') || 'AC Repair', icon: 'ac_unit' },
+    { id: 'carpentry', label: t('catCarpentry') || 'Carpentry', icon: 'carpenter' },
+    { id: 'cleaning', label: t('catCleaning') || 'Cleaning', icon: 'cleaning_services' },
+    { id: 'emergency', label: 'Emergency', icon: 'emergency_home', isEmergency: true },
   ];
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto pb-28 sm:pb-32">
-      {/* Search & Discovery Header */}
-      <div className="px-3 sm:px-layout-margin-mobile pt-space-sm pb-space-xs bg-surface-container-lowest">
-        {/* Active Chapter & Location Quick Bar */}
-        <div className="flex items-center justify-between bg-surface-container-low/80 rounded-xl px-3 py-2 mb-2.5 border border-surface-variant/40 shadow-2xs">
-          <div className="flex items-center gap-2 min-w-0">
-            <span className="material-symbols-outlined text-primary text-[20px] shrink-0 material-symbols-fill">
-              location_on
-            </span>
-            <div className="flex flex-col min-w-0">
-              <span className="text-xs font-bold text-on-surface truncate">
-                {selectedLocality}, {activeCityConfig.name}
-              </span>
-              <span className="text-[10px] text-primary font-semibold truncate">
-                {activeCityConfig.chapter}
-              </span>
-            </div>
+    <div className="flex flex-col w-full max-w-2xl mx-auto px-layout-margin-mobile pb-28 sm:pb-32 gap-3 pt-2">
+      {/* 1. Unified Search & Location Bar */}
+      <div className="flex flex-col gap-2">
+        <div className="flex items-center gap-2">
+          <div className="relative flex-1 bg-surface-container-low rounded-2xl border border-surface-variant/40 flex items-center px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface-container-lowest transition-all">
+            <span className="material-symbols-outlined text-outline text-[20px] shrink-0">search</span>
+            <input
+              className="w-full bg-transparent px-2 text-xs sm:text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none"
+              placeholder={t('searchPlaceholder') || 'Search electrician, plumber...'}
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+            />
+            {searchQuery ? (
+              <button
+                aria-label="Clear"
+                onClick={() => setSearchQuery('')}
+                className="text-outline hover:text-on-surface p-1"
+                type="button"
+              >
+                <span className="material-symbols-outlined text-[18px]">close</span>
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setVoiceSearchModalOpen(true)}
+                className="text-primary hover:text-primary-container p-1 shrink-0"
+                title="Voice Search"
+              >
+                <span className="material-symbols-outlined text-[20px] material-symbols-fill">mic</span>
+              </button>
+            )}
           </div>
+
+          {/* Quick Location Pill */}
           <button
             type="button"
             onClick={() => setLocationModalOpen(true)}
-            className="text-xs font-black text-primary bg-white hover:bg-primary-fixed/30 active:scale-95 px-2.5 py-1 rounded-lg border border-primary/30 flex items-center gap-1 shrink-0 ml-2 shadow-xs transition-all"
+            className="flex items-center gap-1 bg-surface-container-low hover:bg-surface-container px-2.5 py-2.5 rounded-2xl border border-surface-variant/40 text-xs font-bold text-on-surface shrink-0 active:scale-95 transition-all shadow-2xs"
+            title="Change Location"
           >
-            <span className="material-symbols-outlined text-[14px]">edit_location</span>
-            <span>{t('changeLocation') || 'बदलें'}</span>
+            <span className="material-symbols-outlined text-primary text-[17px] material-symbols-fill shrink-0">
+              location_on
+            </span>
+            <span className="max-w-[70px] sm:max-w-[100px] truncate">{activeCityConfig.name}</span>
+            <span className="material-symbols-outlined text-[14px] text-outline">expand_more</span>
           </button>
         </div>
 
-        {/* City Filter Pills */}
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-2 no-scrollbar mb-1">
-          {supportedCities.map((city) => (
-            <button
-              key={city.id}
-              type="button"
-              onClick={() => handleCityTabClick(city.id)}
-              className={`px-3 py-1 rounded-lg text-xs font-bold shrink-0 transition-all flex items-center gap-1 ${
-                cityFilter === city.id
-                  ? 'bg-primary text-white shadow-xs'
-                  : 'bg-surface-container hover:bg-surface-container-high text-on-surface'
-              }`}
-            >
-              <span>{city.name}</span>
-              {city.id === 'sultanpur' && (
-                <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
-              )}
-            </button>
-          ))}
-          <button
-            type="button"
-            onClick={() => handleCityTabClick('all')}
-            className={`px-3 py-1 rounded-lg text-xs font-bold shrink-0 transition-all ${
-              cityFilter === 'all'
-                ? 'bg-primary text-white shadow-xs'
-                : 'bg-surface-container hover:bg-surface-container-high text-on-surface-variant'
-            }`}
-          >
-            All Cities
-          </button>
-        </div>
-
-        {/* Search Input Field */}
-        <div className="relative w-full">
-          <div className="absolute inset-y-0 left-0 pl-space-sm flex items-center pointer-events-none text-outline">
-            <span className="material-symbols-outlined text-[20px]">search</span>
-          </div>
-          <input
-            className="w-full h-12 pl-10 pr-10 rounded-lg bg-surface-container-low text-on-surface placeholder:text-on-surface-variant text-[16px] font-body-md focus:outline-none focus:bg-surface-container-lowest shadow-[0_1px_2px_rgba(20,30,24,0.05)] border border-surface-variant/40 transition-colors"
-            id="serviceSearch"
-            placeholder={t('searchPlaceholder')}
-            type="text"
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-          />
-          {searchQuery ? (
-            <button
-              aria-label="Clear"
-              onClick={() => setSearchQuery('')}
-              className="absolute inset-y-0 right-0 pr-space-sm flex items-center text-outline hover:text-on-surface"
-              type="button"
-            >
-              <span className="material-symbols-outlined text-[20px]">close</span>
-            </button>
-          ) : (
-            <button
-              aria-label="Voice search"
-              onClick={() => setVoiceSearchModalOpen(true)}
-              className="absolute inset-y-0 right-0 pr-space-sm flex items-center text-primary hover:text-primary-container"
-              type="button"
-              title="बोलकर खोजें (Speak to Search)"
-            >
-              <span className="material-symbols-outlined text-[20px] material-symbols-fill">mic</span>
-            </button>
-          )}
-        </div>
-
-        {/* Locality Quick Chips for Active City */}
-        <div className="flex items-center gap-space-xs overflow-x-auto py-space-xs no-scrollbar mt-space-xs">
-          {activeCityConfig.popularAreas.map((area) => (
-            <button
-              key={area}
-              onClick={() => setActiveLocalityFilter(area === 'All' ? 'all' : area)}
-              className={`flex items-center gap-space-xxs px-space-sm py-1.5 rounded-full text-label-md font-label-md shrink-0 shadow-xs transition-all ${
-                (area === 'All' && activeLocalityFilter === 'all') ||
-                activeLocalityFilter.toLowerCase() === area.toLowerCase()
-                  ? 'bg-primary text-on-primary font-bold'
-                  : 'bg-surface-container-high text-on-surface-variant'
-              }`}
-            >
-              <span className="material-symbols-outlined text-[15px]">
-                {area === 'All' ? 'near_me' : 'location_pin'}
-              </span>
-              <span>{area === 'All' ? `All ${activeCityConfig.name}` : area}</span>
-            </button>
-          ))}
-          <button
-            onClick={() => {
-              setAvailableOnly(!availableOnly);
-            }}
-            className={`flex items-center gap-space-xxs px-space-sm py-1.5 rounded-full text-label-md font-label-md shrink-0 transition-colors ${
-              availableOnly
-                ? 'bg-secondary text-white font-bold'
-                : 'bg-surface-container-high text-on-surface-variant hover:text-on-surface'
-            }`}
-          >
-            <span className="material-symbols-outlined text-[15px]">bolt</span>
-            <span>{t('availableToday')}</span>
-          </button>
-        </div>
-
-        {/* Category Tabs */}
-        <div className="flex items-center gap-space-xs overflow-x-auto pb-space-xxs pt-space-xxs border-b border-surface-variant no-scrollbar text-label-md font-label-md">
+        {/* 2. Horizontal Category Carousel */}
+        <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar text-xs">
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
               <button
                 key={cat.id}
+                type="button"
                 onClick={() => {
                   if (cat.isEmergency) {
                     setEmergencyModalOpen(true);
@@ -252,113 +147,105 @@ export const WorkersPage = () => {
                     setSelectedCategory(cat.id);
                   }
                 }}
-                className={`category-tab py-2 px-space-xs shrink-0 transition-colors flex items-center gap-1 ${
+                className={`flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap shrink-0 transition-all active:scale-95 ${
                   isSelected
-                    ? 'text-primary font-bold border-b-2 border-primary'
+                    ? 'bg-primary text-white shadow-xs'
                     : cat.isEmergency
-                    ? 'text-tertiary-container hover:text-tertiary font-bold'
-                    : 'text-on-surface-variant hover:text-on-surface'
+                    ? 'bg-tertiary-fixed text-on-tertiary-fixed hover:bg-tertiary-container'
+                    : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface border border-surface-variant/30'
                 }`}
               >
-                {cat.isEmergency && (
-                  <span className="material-symbols-outlined text-[16px] text-tertiary">
-                    fmd_bad
-                  </span>
-                )}
+                <span className="material-symbols-outlined text-[16px]">{cat.icon}</span>
                 <span>{cat.label}</span>
               </button>
             );
           })}
         </div>
-      </div>
 
-      {/* Filter & Sort Control Bar */}
-      <div className="px-3 sm:px-layout-margin-mobile py-space-xs bg-surface-container flex items-center justify-between gap-2 shadow-[0_1px_3px_rgba(20,30,24,0.04)] border-b border-surface-variant/40">
-        {/* Sort Dropdown */}
-        <div className="flex items-center gap-1.5 min-w-0">
-          <span className="font-label-sm text-[11px] text-on-surface-variant uppercase tracking-wider font-semibold shrink-0">
-            {t('sortLabel')}
-          </span>
-          <div className="relative">
-            <select
-              value={sortBy}
-              onChange={(e) => setSortBy(e.target.value)}
-              className="appearance-none bg-surface-container-lowest pl-2.5 pr-7 py-1 rounded-md text-on-surface font-label-md text-label-md shadow-xs border border-surface-variant/50 focus:outline-none cursor-pointer"
+        {/* 3. Compact Filter & Sort Bar */}
+        <div className="flex items-center justify-between gap-2 px-1 text-xs">
+          <div className="flex items-center gap-2">
+            {/* City Dropdown */}
+            <div className="relative">
+              <select
+                value={cityFilter}
+                onChange={(e) => {
+                  setCityFilter(e.target.value);
+                  if (e.target.value !== 'all') {
+                    const target = supportedCities.find((c) => c.id === e.target.value);
+                    if (target) updateLocation(target.id, target.defaultLocality);
+                  }
+                }}
+                className="appearance-none bg-surface-container-low pl-2.5 pr-6 py-1 rounded-lg text-on-surface font-bold text-[11px] border border-surface-variant/40 focus:outline-none cursor-pointer"
+              >
+                {supportedCities.map((c) => (
+                  <option key={c.id} value={c.id}>
+                    {c.name}
+                  </option>
+                ))}
+                <option value="all">All Cities</option>
+              </select>
+              <span className="material-symbols-outlined text-[14px] text-outline absolute right-1.5 top-1.5 pointer-events-none">
+                expand_more
+              </span>
+            </div>
+
+            {/* Sort Dropdown */}
+            <div className="relative">
+              <select
+                value={sortBy}
+                onChange={(e) => setSortBy(e.target.value)}
+                className="appearance-none bg-surface-container-low pl-2.5 pr-6 py-1 rounded-lg text-on-surface font-bold text-[11px] border border-surface-variant/40 focus:outline-none cursor-pointer"
+              >
+                <option value="distance">Nearest</option>
+                <option value="rating">Top Rated</option>
+                <option value="jobs">Most Jobs</option>
+              </select>
+              <span className="material-symbols-outlined text-[14px] text-outline absolute right-1.5 top-1.5 pointer-events-none">
+                expand_more
+              </span>
+            </div>
+
+            {/* Available Today Pill */}
+            <button
+              type="button"
+              onClick={() => setAvailableOnly(!availableOnly)}
+              className={`px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all ${
+                availableOnly
+                  ? 'bg-secondary text-white'
+                  : 'bg-surface-container-low text-on-surface-variant border border-surface-variant/30'
+              }`}
             >
-              <option value="distance">{t('sortDistance')}</option>
-              <option value="rating">{t('sortRating')}</option>
-              <option value="jobs">{t('sortJobs')}</option>
-            </select>
-            <span className="material-symbols-outlined text-[16px] text-outline absolute right-1.5 top-1.5 pointer-events-none">
-              expand_more
-            </span>
+              <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span>Available Now</span>
+            </button>
           </div>
-        </div>
 
-        {/* Available Now Toggle Switch */}
-        <label className="flex items-center gap-space-xs cursor-pointer select-none">
-          <span className="font-label-sm text-label-sm text-on-surface font-semibold flex items-center gap-1">
-            <span className="w-2 h-2 rounded-full bg-secondary inline-block animate-pulse"></span>
-            {t('availableNow')}
+          {/* Result Count */}
+          <span className="text-[11px] font-bold text-on-surface-variant shrink-0">
+            {sortedWorkers.length} {sortedWorkers.length === 1 ? 'Worker' : 'Workers'}
           </span>
-          <div className="relative">
-            <input
-              checked={availableOnly}
-              onChange={(e) => setAvailableOnly(e.target.checked)}
-              className="sr-only peer"
-              type="checkbox"
-            />
-            <div className="w-9 h-5 bg-surface-variant peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-primary-container"></div>
-          </div>
-        </label>
-      </div>
-
-      {/* Cooperative Value Guarantee Banner */}
-      <div className="px-layout-margin-mobile pt-space-sm pb-space-xxs">
-        <div className="p-space-sm bg-secondary-container/30 rounded-lg flex items-start gap-space-xs border border-secondary/20">
-          <span
-            className="material-symbols-outlined text-secondary text-[22px] shrink-0 mt-0.5 material-symbols-fill"
-          >
-            handshake
-          </span>
-          <div className="flex flex-col">
-            <span className="font-label-md text-label-md text-on-secondary-container font-bold">
-              {t('guaranteeTitle')}
-            </span>
-            <p className="font-body-sm text-body-sm text-on-surface-variant leading-tight mt-0.5">
-              {t('guaranteeDesc')}
-            </p>
-          </div>
         </div>
       </div>
 
-      {/* Results Count & Active Badge */}
-      <div className="px-layout-margin-mobile pt-space-xs pb-space-xxs flex items-center justify-between">
-        <span className="font-label-md text-label-md text-on-surface-variant">
-          {t('showingWorkers')}: <strong className="text-on-surface font-bold">{sortedWorkers.length}</strong>
-        </span>
-        <span className="inline-flex items-center gap-1 text-label-sm font-label-sm px-2 py-0.5 rounded bg-surface-container text-on-surface-variant font-medium">
-          <span className="material-symbols-outlined text-[13px] text-primary">verified_user</span>
-          {t('coopAudited')}
-        </span>
-      </div>
-
-      {/* Worker Cards List */}
-      <div className="px-layout-margin-mobile flex flex-col gap-space-sm pb-space-2xl pt-space-xxs">
+      {/* 4. Worker Cards List */}
+      <div className="flex flex-col gap-2.5">
         {sortedWorkers.length === 0 ? (
-          <div className="text-center py-12 bg-surface-container-low rounded-xl p-6">
+          <div className="text-center py-10 bg-surface-container-low rounded-2xl p-6 border border-surface-variant/30">
             <span className="material-symbols-outlined text-4xl text-outline mb-2">person_search</span>
-            <p className="font-headline-sm text-on-surface">No workers match this filter.</p>
-            <p className="text-body-sm text-on-surface-variant mt-1">
-              Try resetting the search or category filter.
+            <p className="font-bold text-on-surface text-sm">No technicians match this filter.</p>
+            <p className="text-xs text-on-surface-variant mt-1">
+              Try resetting your search or location filter.
             </p>
             <button
+              type="button"
               onClick={() => {
                 setSelectedCategory('all');
                 setSearchQuery('');
                 setAvailableOnly(false);
+                setCityFilter('all');
               }}
-              className="mt-4 px-4 py-2 bg-primary text-white rounded-lg font-label-md"
+              className="mt-3 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
             >
               Reset Filters
             </button>
@@ -368,21 +255,21 @@ export const WorkersPage = () => {
             <article
               key={worker.id}
               onClick={() => handleWorkerClick(worker.id)}
-              className="bg-surface-container-lowest rounded-xl p-space-md shadow-[0_1px_4px_rgba(20,30,24,0.06)] flex flex-col gap-space-sm transition-all hover:shadow-[0_4px_12px_rgba(20,30,24,0.08)] border border-surface-variant/40 cursor-pointer"
+              className="bg-surface-container-lowest rounded-2xl p-3.5 shadow-2xs hover:shadow-sm border border-surface-variant/40 transition-all cursor-pointer flex flex-col gap-2.5 active:scale-[0.99]"
             >
-              {/* Top Row: Avatar & Details */}
-              <div className="flex items-start gap-space-sm">
+              {/* Header: Photo + Info + Co-Owner Badge */}
+              <div className="flex items-start gap-3">
                 <div className="relative shrink-0">
                   <img
                     alt={worker.name}
-                    className="w-16 h-16 rounded-lg object-cover bg-surface-container border border-surface-variant/40"
+                    className="w-14 h-14 rounded-xl object-cover bg-surface-container border border-surface-variant/40"
                     src={worker.avatar}
                   />
                   <span
-                    className="absolute -bottom-1 -right-1 bg-secondary text-on-secondary rounded-full w-5 h-5 flex items-center justify-center shadow"
+                    className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-xs"
                     title="Cooperative Verified"
                   >
-                    <span className="material-symbols-outlined text-[14px] material-symbols-fill text-white">
+                    <span className="material-symbols-outlined text-[12px] material-symbols-fill">
                       check
                     </span>
                   </span>
@@ -390,85 +277,86 @@ export const WorkersPage = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <h3 className="font-headline-sm text-headline-sm text-on-surface truncate font-extrabold">
+                    <h3 className="font-bold text-on-surface text-sm sm:text-base truncate">
                       {worker.name}
                     </h3>
-                    <span className="font-label-sm text-label-sm bg-primary-fixed text-on-primary-fixed font-bold px-2 py-0.5 rounded shrink-0">
-                      Co-Owner
+                    <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-md shrink-0">
+                      Co-Owner #{worker.memberId}
                     </span>
                   </div>
-                  <p className="font-body-sm text-body-sm text-on-surface-variant font-medium mt-0.5 line-clamp-1">
+
+                  <p className="text-xs text-on-surface-variant font-medium line-clamp-1 mt-0.5">
                     {worker.trade}
                   </p>
-                  <div className="flex items-center gap-1.5 mt-1 text-label-sm font-label-sm text-on-surface">
-                    <span className="material-symbols-outlined text-tertiary-fixed-dim text-[16px] material-symbols-fill text-amber-500">
-                      star
+
+                  <div className="flex items-center gap-2 mt-1 text-xs text-on-surface flex-wrap">
+                    <span className="flex items-center gap-0.5 font-bold text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 text-[11px]">
+                      ★ {worker.rating} ({worker.reviewCount})
                     </span>
-                    <span className="font-bold">{worker.rating}</span>
-                    <span className="text-on-surface-variant">({worker.reviewCount} reviews)</span>
-                    <span className="text-outline-variant">•</span>
-                    <span className="text-secondary font-semibold">{worker.onTimeRate} On-Time</span>
+                    <span className="text-[11px] text-on-surface-variant flex items-center gap-0.5">
+                      <span className="material-symbols-outlined text-[13px] text-outline">near_me</span>
+                      {worker.distance}
+                    </span>
+                    <span className="text-[11px] text-secondary font-bold">
+                      {worker.onTimeRate} On-Time
+                    </span>
                   </div>
                 </div>
               </div>
 
-              {/* Certifications & Proximity meta */}
-              <div className="bg-surface-container-low rounded-lg p-space-xs flex flex-col gap-1 text-body-sm font-body-sm border border-surface-variant/20">
-                <div className="flex items-center justify-between flex-wrap gap-x-2">
-                  <span className="flex items-center gap-1 text-primary font-bold text-label-sm font-label-sm">
-                    <span className="material-symbols-outlined text-[16px]">verified</span>
-                    {worker.chapter || `${worker.city} Chapter`}
-                  </span>
-                  <span className="flex items-center gap-1 text-on-surface text-label-sm font-label-sm">
-                    <span className="material-symbols-outlined text-[16px] text-outline">
-                      near_me
-                    </span>
-                    {worker.distance} • {worker.area ? worker.area.split(',')[0] : worker.city}
-                  </span>
+              {/* Badges strip: Demo Video & Next Slot */}
+              <div className="flex items-center justify-between text-xs bg-surface-container-low px-2.5 py-1.5 rounded-xl border border-surface-variant/20 flex-wrap gap-1">
+                <div className="flex items-center gap-1 text-on-surface-variant text-[11px]">
+                  <span className="material-symbols-outlined text-primary text-[14px]">schedule</span>
+                  <span>Next: <strong className="text-on-surface">{worker.nextSlot}</strong></span>
                 </div>
-                <div className="flex items-center justify-between pt-0.5 text-label-sm text-on-surface-variant">
-                  <span className="flex items-center gap-1">
-                    <span className="material-symbols-outlined text-[15px] text-primary">
-                      schedule
+
+                {worker.skillAssessment?.demoVideo ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setSkillAssessmentModalWorker(worker);
+                    }}
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100/70 hover:bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300 active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[13px] text-amber-700 material-symbols-fill">
+                      smart_display
                     </span>
-                    Next: <strong className="text-on-surface">{worker.nextSlot}</strong>
+                    <span>2-Min Demo Video</span>
+                  </button>
+                ) : (
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
+                    <span className="material-symbols-outlined text-[13px]">verified</span>
+                    <span>DigiLocker Verified</span>
                   </span>
-                  {worker.skillAssessment?.demoVideo ? (
-                    <span className="text-secondary font-bold flex items-center gap-1">
-                      <span className="material-symbols-outlined text-[14px]">videocam</span>
-                      <span>Demo Verified</span>
-                    </span>
-                  ) : (
-                    <span className="text-secondary font-bold">DigiLocker Certified</span>
-                  )}
-                </div>
+                )}
               </div>
 
-              {/* Action and Pricing Tier */}
-              <div className="flex items-center justify-between gap-2 pt-2 border-t border-surface-variant/40">
-                <div className="min-w-0 shrink">
-                  <span className="text-[10px] sm:text-xs text-on-surface-variant font-semibold block leading-tight">
+              {/* Price & Action Row */}
+              <div className="flex items-center justify-between gap-2 pt-1 border-t border-surface-variant/30">
+                <div>
+                  <span className="text-[10px] text-on-surface-variant block leading-tight font-medium">
                     Standard Rate
                   </span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-base sm:text-lg text-primary font-black">
+                    <span className="text-base sm:text-lg font-black text-primary">
                       ₹{worker.baseQuote}
                     </span>
-                    <span className="text-[10px] sm:text-[11px] text-secondary font-bold whitespace-nowrap">
-                      (0% fee)
-                    </span>
+                    <span className="text-[10px] text-secondary font-bold">(0% fee)</span>
                   </div>
                 </div>
+
                 <button
                   type="button"
                   onClick={(e) => {
                     e.stopPropagation();
                     handleWorkerClick(worker.id);
                   }}
-                  className="px-3 sm:px-4 py-2 sm:py-2.5 rounded-xl bg-primary text-on-primary text-xs sm:text-sm font-bold flex items-center gap-1 sm:gap-1.5 shadow-sm active:scale-95 transition-all shrink-0"
+                  className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-bold flex items-center gap-1 shadow-xs hover:bg-primary-container active:scale-95 transition-all shrink-0"
                 >
-                  <span className="truncate max-w-[150px] sm:max-w-none">{t('viewProfileAndBook')}</span>
-                  <span className="material-symbols-outlined text-[16px] sm:text-[18px] shrink-0">arrow_forward</span>
+                  <span>Book Technician</span>
+                  <span className="material-symbols-outlined text-[15px]">arrow_forward</span>
                 </button>
               </div>
             </article>

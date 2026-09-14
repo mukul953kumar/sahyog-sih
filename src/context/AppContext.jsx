@@ -7,6 +7,7 @@ import {
   COOPERATIVE_INFO,
   RESOLUTIONS,
   SUPPORTED_CITIES,
+  DEMO_USERS,
 } from '../data/hardcodedData';
 import { TRANSLATIONS } from '../i18n/translations';
 
@@ -67,43 +68,103 @@ export const AppProvider = ({ children }) => {
     chapter: activeCityConfig.chapter,
   };
 
-  // Navigation state (Default worker is Awadhesh Sharma for Sultanpur)
-  const [currentView, setCurrentView] = useState('home');
-  const [selectedWorkerId, setSelectedWorkerId] = useState('awadhesh-sharma-sln');
-  const [selectedCategory, setSelectedCategory] = useState('all');
-  const [searchQuery, setSearchQuery] = useState('');
-  const [availableOnly, setAvailableOnly] = useState(false);
-  const [sortBy, setSortBy] = useState('distance'); // 'distance' | 'rating' | 'jobs'
-
   // User Authentication & Role: 'customer' | 'worker' | 'admin'
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem('sahyog_is_auth') === 'true';
+  });
+
   const [userRole, setUserRole] = useState(() => {
     return localStorage.getItem('sahyog_role') || 'customer';
   });
 
   const [currentUser, setCurrentUser] = useState(() => {
     const saved = localStorage.getItem('sahyog_user');
-    return saved
-      ? JSON.parse(saved)
-      : {
-          name: 'Priya Sharma',
-          phone: '98765 43210',
-          role: 'customer',
-          locality: 'Civil Lines, Sultanpur',
-          avatar: 'https://lh3.googleusercontent.com/aida-public/AB6AXuAe-bmDk-p9IcNdQl6BkQrbmVmPBPTNgu01w2_iO_U1pK2hrq7IEiWyxgOBzgbhnlrXQHAZgeDP-jBJUf8tlZdKmx0_SZMmuMCvDguPHCMheSQdcWvSDDJZSGnJISSC6iCbfU9YWWnni8sz0NcCHUYzMftcRkW8ZCHU0xJXCEU1Y1gfXRtGw1eSQpfBNhrUY_fXf2mkzk6sAatdarPxMwgKHkT8zF4v7GccQTCEny4qkelRazmb6IzG',
-        };
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error parsing saved user', e);
+      }
+    }
+    const role = localStorage.getItem('sahyog_role') || 'customer';
+    return DEMO_USERS[role] || DEMO_USERS.customer;
   });
+
+  // Navigation state - Default to 'login' when opening the app / unauthenticated so judges always see Login first
+  const [currentView, setCurrentView] = useState(() => {
+    const isAuth = localStorage.getItem('sahyog_is_auth') === 'true';
+    if (!isAuth) return 'login';
+    const role = localStorage.getItem('sahyog_role') || 'customer';
+    if (role === 'worker') return 'worker-dashboard';
+    if (role === 'admin') return 'admin-dashboard';
+    return 'home';
+  });
+
+  const [selectedWorkerId, setSelectedWorkerId] = useState('awadhesh-sharma-sln');
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [availableOnly, setAvailableOnly] = useState(false);
+  const [sortBy, setSortBy] = useState('distance'); // 'distance' | 'rating' | 'jobs'
+
+  // Direct 1-Click Demo Login for Hackathon Judges / Evaluators
+  const loginAsDemoUser = (demoKey = 'customer') => {
+    const userProfile = DEMO_USERS[demoKey] || DEMO_USERS.customer;
+    setCurrentUser(userProfile);
+    setUserRole(userProfile.role);
+    setIsAuthenticated(true);
+    localStorage.setItem('sahyog_is_auth', 'true');
+    localStorage.setItem('sahyog_user', JSON.stringify(userProfile));
+    localStorage.setItem('sahyog_role', userProfile.role);
+
+    if (userProfile.city) {
+      setSelectedCity(userProfile.city);
+      localStorage.setItem('sahyog_city', userProfile.city);
+    }
+    if (userProfile.locality) {
+      setSelectedLocality(userProfile.locality);
+      localStorage.setItem('sahyog_locality', userProfile.locality);
+    }
+
+    if (userProfile.role === 'worker') {
+      setSelectedWorkerId('awadhesh-sharma-sln');
+      setCurrentView('worker-dashboard');
+    } else if (userProfile.role === 'admin') {
+      setCurrentView('admin-dashboard');
+    } else {
+      setCurrentView('home');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // Switch Role helper that updates context and navigates
   const switchRole = (newRole) => {
+    const userProfile = DEMO_USERS[newRole] || {
+      ...currentUser,
+      role: newRole,
+    };
+    setCurrentUser(userProfile);
     setUserRole(newRole);
     localStorage.setItem('sahyog_role', newRole);
+    localStorage.setItem('sahyog_user', JSON.stringify(userProfile));
+
     if (newRole === 'worker') {
+      setSelectedWorkerId('awadhesh-sharma-sln');
       setCurrentView('worker-dashboard');
     } else if (newRole === 'admin') {
       setCurrentView('admin-dashboard');
     } else {
       setCurrentView('home');
     }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
+
+  // Logout function that clears session and navigates back to login view
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    localStorage.removeItem('sahyog_is_auth');
+    localStorage.removeItem('sahyog_user');
+    setCurrentView('login');
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   // Bookings list (with localStorage fallback)
@@ -366,12 +427,136 @@ export const AppProvider = ({ children }) => {
     },
   ]);
 
+  const [workersList, setWorkersList] = useState(WORKERS);
   const [resolutionsList, setResolutionsList] = useState(RESOLUTIONS);
+
+  const submitWorkerRegistration = ({
+    name,
+    phone,
+    trade,
+    tradeId,
+    experience = '4 Yrs',
+    locality,
+    verificationMethod = 'skill_assessment',
+    eShramId,
+    workshopName,
+    workshopAddress,
+    demoVideo,
+    toolsVerified,
+    peerGuarantors,
+    avatar,
+  }) => {
+    const kycId = `KYC-${Math.floor(1000 + Math.random() * 9000)}`;
+    const newKycEntry = {
+      id: kycId,
+      name,
+      trade: trade || 'Master Electrician & Wireman',
+      tradeId: tradeId || 'electrical',
+      experience: experience.includes('Yr') ? experience : `${experience} Yrs`,
+      verificationMethod: verificationMethod || 'skill_assessment',
+      eShramId: eShramId || (verificationMethod === 'dpi_eshram' ? `e-Shram #${Math.floor(1000+Math.random()*9000)}-${Math.floor(1000+Math.random()*9000)}` : 'Not Available (Applied via Practical Demo)'),
+      digiLockerStatus: verificationMethod === 'dpi_eshram' ? 'Verified (Govt e-Shram API)' : 'Practical Bench Verified',
+      policeCheck: 'Submitted (Local Station Audit)',
+      date: 'Just now',
+      status: 'pending',
+      avatar: avatar || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&auto=format&fit=crop&q=80',
+      skillAssessment: {
+        status: 'pending_review',
+        practicalScore: '97/100',
+        grade: 'Grade A+ (Live Bench Test Review)',
+        demoVideo: demoVideo || {
+          title: `Live Practical Guild Demo - ${trade || 'Technical Service'}`,
+          duration: '2:15 mins',
+          recordedAt: `${locality || activeCityConfig.name} Cooperative Trade Bench`,
+          thumbnail: 'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=600&auto=format&fit=crop&q=80',
+          description: `${name} demonstrates live troubleshooting, safety protocol isolation, and zero-leakage compliance.`,
+          checklist: [
+            'Live safety circuit isolation (Passed)',
+            'Insulated tools protocol (Passed)',
+            'Load test & voltage drop check (Passed)',
+          ],
+        },
+        workshopProof: {
+          shopName: workshopName || `${name} Works & Service Station`,
+          shopAddress: workshopAddress || `${locality || 'Civil Lines'}, ${activeCityConfig.name}`,
+          photo: 'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=600&auto=format&fit=crop&q=80',
+          toolsVerified: toolsVerified || ['Fluke Multimeter', 'Rotary Hammer Drill', 'Insulated Pliers', 'Earthing Tester'],
+          inspectedDate: 'Today by Chapter Inspection Officer',
+        },
+        peerGuarantors: peerGuarantors || [
+          { name: 'Awadhesh Sharma', memberId: 'SLN-101', role: 'Master Wireman Guarantor' },
+          { name: 'Ram Prasad Bind', memberId: 'SLN-108', role: 'Chapter Executive Member' },
+        ],
+      },
+    };
+
+    setKycQueue((prev) => [newKycEntry, ...prev]);
+    return newKycEntry;
+  };
 
   const approveWorkerKyc = (applicantId) => {
     setKycQueue((prev) =>
       prev.map((k) => (k.id === applicantId ? { ...k, status: 'approved' } : k))
     );
+
+    const target = kycQueue.find((k) => k.id === applicantId);
+    if (target) {
+      const generatedMemberId = `SLN-${Math.floor(120 + Math.random() * 80)}`;
+      const newWorkerObject = {
+        id: `worker-${target.id.toLowerCase()}`,
+        name: target.name,
+        trade: target.trade,
+        category: target.tradeId || (target.trade.toLowerCase().includes('plumb')
+          ? 'plumbing'
+          : target.trade.toLowerCase().includes('clean')
+          ? 'cleaning'
+          : target.trade.toLowerCase().includes('carpent')
+          ? 'carpentry'
+          : target.trade.toLowerCase().includes('ac')
+          ? 'ac'
+          : 'electrical'),
+        city: selectedCity || 'sultanpur',
+        memberId: generatedMemberId,
+        chapter: `Sahyog ${activeCityConfig.name} Chapter`,
+        memberSince: '2026',
+        verified: true,
+        isCoOwner: true,
+        eShramId: target.eShramId,
+        digiLockerVerified: true,
+        rating: 5.0,
+        reviewCount: 1,
+        experienceYears: target.experience,
+        jobsCompleted: 0,
+        onTimeRate: '100%',
+        responseTime: '10m',
+        avatar: target.avatar || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&auto=format&fit=crop&q=80',
+        detailAvatar: target.avatar || 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&auto=format&fit=crop&q=80',
+        distance: '0.9 km',
+        area: `${selectedLocality || 'Civil Lines'}, ${activeCityConfig.name}`,
+        coverageArea: `${selectedLocality || 'Civil Lines'} (within 8 km)`,
+        availableNow: true,
+        nextSlot: 'Today, 4:00 PM',
+        baseQuote: 199,
+        standardJobQuote: 450,
+        bio: `Newly approved co-owner tradesperson (#${generatedMemberId}). Vouched by Guild peers with ${target.skillAssessment?.practicalScore || '97/100'} score.`,
+        skillAssessment: target.skillAssessment,
+        skills: ['Practical Skill Assessment Grade A+', 'ISI Safety Compliant', 'Co-op Warranty'],
+        priceGuide: [
+          { item: 'Standard Diagnostic & Inspection', price: '₹199', note: 'Co-op fixed rate' },
+          { item: 'Standard Repair Service', price: '₹450', note: '100% direct labour' },
+        ],
+        reviews: [
+          {
+            user: 'Cooperative Chapter Audit',
+            rating: 5,
+            date: 'Today',
+            comment: 'Practical skill bench test passed with Grade A+. Verified cooperative co-owner.',
+          },
+        ],
+      };
+
+      setWorkersList((prev) => [newWorkerObject, ...prev]);
+    }
   };
 
   const rejectWorkerKyc = (applicantId) => {
@@ -493,19 +678,30 @@ export const AppProvider = ({ children }) => {
     );
   };
 
-  const handleLogin = (phone, role, name = 'Cooperative Member') => {
+  const handleLogin = (phone, role = 'customer', name = 'Cooperative Member') => {
+    const baseDemo = DEMO_USERS[role] || DEMO_USERS.customer;
     const user = {
-      name,
-      phone,
+      ...baseDemo,
+      name: name || baseDemo.name,
+      phone: phone || baseDemo.phone,
       role,
-      locality: 'Indiranagar, Ward 112',
-      avatar:
-        role === 'worker'
-          ? currentWorker.avatar
-          : 'https://lh3.googleusercontent.com/aida-public/AB6AXuAe-bmDk-p9IcNdQl6BkQrbmVmPBPTNgu01w2_iO_U1pK2hrq7IEiWyxgOBzgbhnlrXQHAZgeDP-jBJUf8tlZdKmx0_SZMmuMCvDguPHCMheSQdcWvSDDJZSGnJISSC6iCbfU9YWWnni8sz0NcCHUYzMftcRkW8ZCHU0xJXCEU1Y1gfXRtGw1eSQpfBNhrUY_fXf2mkzk6sAatdarPxMwgKHkT8zF4v7GccQTCEny4qkelRazmb6IzG',
     };
     setCurrentUser(user);
-    switchRole(role);
+    setUserRole(role);
+    setIsAuthenticated(true);
+    localStorage.setItem('sahyog_is_auth', 'true');
+    localStorage.setItem('sahyog_user', JSON.stringify(user));
+    localStorage.setItem('sahyog_role', role);
+
+    if (role === 'worker') {
+      setSelectedWorkerId('awadhesh-sharma-sln');
+      setCurrentView('worker-dashboard');
+    } else if (role === 'admin') {
+      setCurrentView('admin-dashboard');
+    } else {
+      setCurrentView('home');
+    }
+    window.scrollTo({ top: 0, behavior: 'smooth' });
   };
 
   return (
@@ -515,6 +711,7 @@ export const AppProvider = ({ children }) => {
         setLanguage,
         t,
         currentView,
+        setCurrentView,
         navigateTo,
         selectedWorkerId,
         setSelectedWorkerId,
@@ -527,14 +724,23 @@ export const AppProvider = ({ children }) => {
         setAvailableOnly,
         sortBy,
         setSortBy,
+        isAuthenticated,
+        setIsAuthenticated,
         userRole,
+        setUserRole,
         switchRole,
         currentUser,
+        setCurrentUser,
+        loginAsDemoUser,
         handleLogin,
+        handleLogout,
+        demoUsers: DEMO_USERS,
         bookings,
+        setBookings,
         createBooking,
         releaseEscrow,
         negotiationThread,
+        setNegotiationThread,
         submitCounterOffer,
         agreedLabourPrice,
         setAgreedLabourPrice,
@@ -566,14 +772,21 @@ export const AppProvider = ({ children }) => {
         workerOnDuty,
         setWorkerOnDuty,
         workerEarnings,
+        setWorkerEarnings,
         incomingJobs,
+        setIncomingJobs,
         claimEscrowWithPin,
         acceptIncomingJob,
         declineIncomingJob,
         // Admin state
         kycQueue,
+        setKycQueue,
+        submitWorkerRegistration,
         approveWorkerKyc,
         rejectWorkerKyc,
+        resolutionsList,
+        setResolutionsList,
+        publishResolution,
         // Location State
         selectedCity,
         setSelectedCity,
@@ -585,7 +798,8 @@ export const AppProvider = ({ children }) => {
         supportedCities: SUPPORTED_CITIES,
         activeCityConfig,
         cooperativeInfo: dynamicCooperativeInfo,
-        workers: WORKERS,
+        workers: workersList,
+        setWorkersList,
         categories: CATEGORIES,
       }}
     >
