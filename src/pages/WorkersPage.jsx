@@ -83,15 +83,15 @@ export const WorkersPage = () => {
   ];
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto px-layout-margin-mobile pb-28 sm:pb-32 gap-3 pt-2">
+    <div className="flex flex-col w-full max-w-6xl mx-auto px-4 sm:px-6 pb-28 md:pb-16 gap-4 pt-3 animate-fade-in">
       {/* 1. Unified Search & Location Bar */}
-      <div className="flex flex-col gap-2">
-        <div className="flex items-center gap-2">
-          <div className="relative flex-1 bg-surface-container-low rounded-2xl border border-surface-variant/40 flex items-center px-3 py-1.5 focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface-container-lowest transition-all">
-            <span className="material-symbols-outlined text-outline text-[20px] shrink-0">search</span>
+      <div className="bg-surface-container-lowest rounded-2xl p-3.5 sm:p-4 border border-surface-variant/40 shadow-2xs flex flex-col gap-3">
+        <div className="flex flex-col sm:flex-row items-center gap-2.5">
+          <div className="relative flex-1 w-full bg-surface-container-low rounded-2xl border border-surface-variant/40 flex items-center px-3.5 py-2 focus-within:ring-2 focus-within:ring-primary focus-within:bg-surface-container-lowest transition-all">
+            <span className="material-symbols-outlined text-outline text-[22px] shrink-0">search</span>
             <input
-              className="w-full bg-transparent px-2 text-xs sm:text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none"
-              placeholder={t('searchPlaceholder') || 'Search electrician, plumber...'}
+              className="w-full bg-transparent px-2.5 text-xs sm:text-sm font-medium text-on-surface placeholder:text-outline focus:outline-none"
+              placeholder={t('searchPlaceholder') || 'Search electrician, plumber, AC repair, carpentry...'}
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
@@ -121,19 +121,21 @@ export const WorkersPage = () => {
           <button
             type="button"
             onClick={() => setLocationModalOpen(true)}
-            className="flex items-center gap-1 bg-surface-container-low hover:bg-surface-container px-2.5 py-2.5 rounded-2xl border border-surface-variant/40 text-xs font-bold text-on-surface shrink-0 active:scale-95 transition-all shadow-2xs"
+            className="w-full sm:w-auto flex items-center justify-between sm:justify-start gap-1.5 bg-surface-container-low hover:bg-surface-container px-3.5 py-2 rounded-2xl border border-surface-variant/40 text-xs font-bold text-on-surface shrink-0 active:scale-95 transition-all shadow-2xs"
             title="Change Location"
           >
-            <span className="material-symbols-outlined text-primary text-[17px] material-symbols-fill shrink-0">
-              location_on
-            </span>
-            <span className="max-w-[70px] sm:max-w-[100px] truncate">{activeCityConfig.name}</span>
-            <span className="material-symbols-outlined text-[14px] text-outline">expand_more</span>
+            <div className="flex items-center gap-1.5 min-w-0">
+              <span className="material-symbols-outlined text-primary text-[18px] material-symbols-fill shrink-0">
+                location_on
+              </span>
+              <span className="truncate">{selectedLocality || activeCityConfig.name}, {activeCityConfig.name}</span>
+            </div>
+            <span className="material-symbols-outlined text-[14px] text-outline ml-1">expand_more</span>
           </button>
         </div>
 
         {/* 2. Horizontal Category Carousel */}
-        <div className="flex items-center gap-1.5 overflow-x-auto py-1 no-scrollbar text-xs">
+        <div className="flex items-center gap-2 overflow-x-auto py-1 no-scrollbar text-xs">
           {categories.map((cat) => {
             const isSelected = selectedCategory === cat.id;
             return (
@@ -147,7 +149,7 @@ export const WorkersPage = () => {
                     setSelectedCategory(cat.id);
                   }
                 }}
-                className={`flex items-center gap-1 px-3 py-1.5 rounded-xl font-bold whitespace-nowrap shrink-0 transition-all active:scale-95 ${
+                className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl font-bold whitespace-nowrap shrink-0 transition-all active:scale-95 ${
                   isSelected
                     ? 'bg-primary text-white shadow-xs'
                     : cat.isEmergency
@@ -155,16 +157,16 @@ export const WorkersPage = () => {
                     : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface border border-surface-variant/30'
                 }`}
               >
-                <span className="material-symbols-outlined text-[16px]">{cat.icon}</span>
+                <span className="material-symbols-outlined text-[17px]">{cat.icon}</span>
                 <span>{cat.label}</span>
               </button>
             );
           })}
         </div>
 
-        {/* 3. Compact Filter & Sort Bar */}
-        <div className="flex items-center justify-between gap-2 px-1 text-xs">
-          <div className="flex items-center gap-2">
+        {/* 3. Filter & Sort Bar */}
+        <div className="flex items-center justify-between gap-2 px-1 text-xs pt-1 border-t border-surface-variant/30 flex-wrap">
+          <div className="flex items-center gap-2 flex-wrap">
             {/* City Dropdown */}
             <div className="relative">
               <select
@@ -176,7 +178,7 @@ export const WorkersPage = () => {
                     if (target) updateLocation(target.id, target.defaultLocality);
                   }
                 }}
-                className="appearance-none bg-surface-container-low pl-2.5 pr-6 py-1 rounded-lg text-on-surface font-bold text-[11px] border border-surface-variant/40 focus:outline-none cursor-pointer"
+                className="appearance-none bg-surface-container-low pl-2.5 pr-6 py-1 rounded-lg text-on-surface font-bold text-xs border border-surface-variant/40 focus:outline-none cursor-pointer"
               >
                 {supportedCities.map((c) => (
                   <option key={c.id} value={c.id}>
@@ -195,7 +197,7 @@ export const WorkersPage = () => {
               <select
                 value={sortBy}
                 onChange={(e) => setSortBy(e.target.value)}
-                className="appearance-none bg-surface-container-low pl-2.5 pr-6 py-1 rounded-lg text-on-surface font-bold text-[11px] border border-surface-variant/40 focus:outline-none cursor-pointer"
+                className="appearance-none bg-surface-container-low pl-2.5 pr-6 py-1 rounded-lg text-on-surface font-bold text-xs border border-surface-variant/40 focus:outline-none cursor-pointer"
               >
                 <option value="distance">Nearest</option>
                 <option value="rating">Top Rated</option>
@@ -210,30 +212,30 @@ export const WorkersPage = () => {
             <button
               type="button"
               onClick={() => setAvailableOnly(!availableOnly)}
-              className={`px-2 py-1 rounded-lg text-[11px] font-bold flex items-center gap-1 transition-all ${
+              className={`px-2.5 py-1 rounded-lg text-xs font-bold flex items-center gap-1.5 transition-all ${
                 availableOnly
                   ? 'bg-secondary text-white'
                   : 'bg-surface-container-low text-on-surface-variant border border-surface-variant/30'
               }`}
             >
-              <span className="w-1.5 h-1.5 rounded-full bg-amber-400"></span>
+              <span className="w-2 h-2 rounded-full bg-amber-400"></span>
               <span>Available Now</span>
             </button>
           </div>
 
           {/* Result Count */}
-          <span className="text-[11px] font-bold text-on-surface-variant shrink-0">
-            {sortedWorkers.length} {sortedWorkers.length === 1 ? 'Worker' : 'Workers'}
+          <span className="text-xs font-bold text-on-surface-variant shrink-0">
+            Showing <strong className="text-on-surface">{sortedWorkers.length}</strong> {sortedWorkers.length === 1 ? 'Cooperative Worker' : 'Cooperative Workers'}
           </span>
         </div>
       </div>
 
-      {/* 4. Worker Cards List */}
-      <div className="flex flex-col gap-2.5">
+      {/* 4. Worker Cards Grid (2-column on desktop/tablet, 1-column on mobile) */}
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5">
         {sortedWorkers.length === 0 ? (
-          <div className="text-center py-10 bg-surface-container-low rounded-2xl p-6 border border-surface-variant/30">
+          <div className="col-span-full text-center py-12 bg-surface-container-low rounded-2xl p-6 border border-surface-variant/30">
             <span className="material-symbols-outlined text-4xl text-outline mb-2">person_search</span>
-            <p className="font-bold text-on-surface text-sm">No technicians match this filter.</p>
+            <p className="font-bold text-on-surface text-base">No technicians match this filter.</p>
             <p className="text-xs text-on-surface-variant mt-1">
               Try resetting your search or location filter.
             </p>
@@ -255,21 +257,21 @@ export const WorkersPage = () => {
             <article
               key={worker.id}
               onClick={() => handleWorkerClick(worker.id)}
-              className="bg-surface-container-lowest rounded-2xl p-3.5 shadow-2xs hover:shadow-sm border border-surface-variant/40 transition-all cursor-pointer flex flex-col gap-2.5 active:scale-[0.99]"
+              className="bg-surface-container-lowest rounded-2xl p-4 shadow-2xs hover:shadow-md border border-surface-variant/40 hover:border-primary/40 transition-all cursor-pointer flex flex-col justify-between gap-3 active:scale-[0.99] group"
             >
               {/* Header: Photo + Info + Co-Owner Badge */}
-              <div className="flex items-start gap-3">
+              <div className="flex items-start gap-3.5">
                 <div className="relative shrink-0">
                   <img
                     alt={worker.name}
-                    className="w-14 h-14 rounded-xl object-cover bg-surface-container border border-surface-variant/40"
+                    className="w-16 h-16 rounded-2xl object-cover bg-surface-container border border-surface-variant/40 group-hover:scale-105 transition-transform"
                     src={worker.avatar}
                   />
                   <span
-                    className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full w-4.5 h-4.5 flex items-center justify-center shadow-xs"
+                    className="absolute -bottom-1 -right-1 bg-secondary text-white rounded-full w-5 h-5 flex items-center justify-center shadow-xs"
                     title="Cooperative Verified"
                   >
-                    <span className="material-symbols-outlined text-[12px] material-symbols-fill">
+                    <span className="material-symbols-outlined text-[13px] material-symbols-fill">
                       check
                     </span>
                   </span>
@@ -277,7 +279,7 @@ export const WorkersPage = () => {
 
                 <div className="flex-1 min-w-0">
                   <div className="flex items-center justify-between gap-1">
-                    <h3 className="font-bold text-on-surface text-sm sm:text-base truncate">
+                    <h3 className="font-bold text-on-surface text-base truncate">
                       {worker.name}
                     </h3>
                     <span className="text-[10px] font-black bg-primary/10 text-primary px-2 py-0.5 rounded-md shrink-0">
@@ -289,8 +291,8 @@ export const WorkersPage = () => {
                     {worker.trade}
                   </p>
 
-                  <div className="flex items-center gap-2 mt-1 text-xs text-on-surface flex-wrap">
-                    <span className="flex items-center gap-0.5 font-bold text-amber-600 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 text-[11px]">
+                  <div className="flex items-center gap-2 mt-1.5 text-xs text-on-surface flex-wrap">
+                    <span className="flex items-center gap-0.5 font-bold text-amber-700 bg-amber-50 px-1.5 py-0.2 rounded border border-amber-200 text-[11px]">
                       ★ {worker.rating} ({worker.reviewCount})
                     </span>
                     <span className="text-[11px] text-on-surface-variant flex items-center gap-0.5">
@@ -305,9 +307,9 @@ export const WorkersPage = () => {
               </div>
 
               {/* Badges strip: Demo Video & Next Slot */}
-              <div className="flex items-center justify-between text-xs bg-surface-container-low px-2.5 py-1.5 rounded-xl border border-surface-variant/20 flex-wrap gap-1">
-                <div className="flex items-center gap-1 text-on-surface-variant text-[11px]">
-                  <span className="material-symbols-outlined text-primary text-[14px]">schedule</span>
+              <div className="flex items-center justify-between text-xs bg-surface-container-low px-3 py-1.5 rounded-xl border border-surface-variant/20 flex-wrap gap-1">
+                <div className="flex items-center gap-1 text-on-surface-variant text-xs">
+                  <span className="material-symbols-outlined text-primary text-[15px]">schedule</span>
                   <span>Next: <strong className="text-on-surface">{worker.nextSlot}</strong></span>
                 </div>
 
@@ -318,29 +320,29 @@ export const WorkersPage = () => {
                       e.stopPropagation();
                       setSkillAssessmentModalWorker(worker);
                     }}
-                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100/70 hover:bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300 active:scale-95 transition-all"
+                    className="inline-flex items-center gap-1 text-[11px] font-bold text-amber-800 bg-amber-100/80 hover:bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300 active:scale-95 transition-all"
                   >
-                    <span className="material-symbols-outlined text-[13px] text-amber-700 material-symbols-fill">
+                    <span className="material-symbols-outlined text-[14px] text-amber-700 material-symbols-fill">
                       smart_display
                     </span>
                     <span>2-Min Demo Video</span>
                   </button>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/70 px-2 py-0.5 rounded-md">
-                    <span className="material-symbols-outlined text-[13px]">verified</span>
+                  <span className="inline-flex items-center gap-1 text-[11px] font-bold text-emerald-800 bg-emerald-100/80 px-2 py-0.5 rounded-md">
+                    <span className="material-symbols-outlined text-[14px]">verified</span>
                     <span>DigiLocker Verified</span>
                   </span>
                 )}
               </div>
 
               {/* Price & Action Row */}
-              <div className="flex items-center justify-between gap-2 pt-1 border-t border-surface-variant/30">
+              <div className="flex items-center justify-between gap-2 pt-2 border-t border-surface-variant/30">
                 <div>
                   <span className="text-[10px] text-on-surface-variant block leading-tight font-medium">
                     Standard Rate
                   </span>
                   <div className="flex items-baseline gap-1">
-                    <span className="text-base sm:text-lg font-black text-primary">
+                    <span className="text-lg font-black text-primary">
                       ₹{worker.baseQuote}
                     </span>
                     <span className="text-[10px] text-secondary font-bold">(0% fee)</span>
@@ -353,7 +355,7 @@ export const WorkersPage = () => {
                     e.stopPropagation();
                     handleWorkerClick(worker.id);
                   }}
-                  className="px-3.5 py-2 rounded-xl bg-primary text-white text-xs font-bold flex items-center gap-1 shadow-xs hover:bg-primary-container active:scale-95 transition-all shrink-0"
+                  className="px-4 py-2 rounded-xl bg-primary text-white text-xs font-bold flex items-center gap-1.5 shadow-xs hover:bg-primary-container active:scale-95 transition-all shrink-0"
                 >
                   <span>Book Technician</span>
                   <span className="material-symbols-outlined text-[15px]">arrow_forward</span>

@@ -29,7 +29,7 @@ export const ProfilePage = () => {
   const pendingKycCount = (kycQueue || []).filter((k) => k.status === 'pending').length;
 
   return (
-    <div className="w-full max-w-2xl mx-auto px-layout-margin-mobile py-space-md flex flex-col gap-space-md pb-28 animate-fade-in">
+    <div className="w-full max-w-5xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4 pb-28 md:pb-16 animate-fade-in">
       {/* SIH Judge Demo Helper Ribbon */}
       <div className="bg-primary/10 border border-primary/20 rounded-xl p-3 flex items-center justify-between gap-2 shadow-xs">
         <div className="flex items-center gap-2">

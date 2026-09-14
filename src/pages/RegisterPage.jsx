@@ -143,7 +143,7 @@ export const RegisterPage = () => {
   };
 
   return (
-    <div className="w-full max-w-xl mx-auto px-layout-margin-mobile py-space-md flex flex-col gap-4 pb-28 animate-fade-in">
+    <div className="w-full max-w-3xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4 pb-28 animate-fade-in">
       {/* Top Breadcrumb & Progress Header */}
       <div className="flex flex-col gap-1.5">
         <div className="flex items-center justify-between text-xs font-bold">

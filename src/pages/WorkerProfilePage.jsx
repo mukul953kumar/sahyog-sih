@@ -12,14 +12,14 @@ export const WorkerProfilePage = () => {
   } = useApp();
 
   return (
-    <div className="flex flex-col w-full max-w-2xl mx-auto px-layout-margin-mobile py-space-md space-y-space-md pb-32">
+    <div className="flex flex-col w-full max-w-4xl mx-auto px-4 sm:px-6 py-4 space-y-4 pb-32 animate-fade-in">
       {/* Worker Profile Hero Card */}
       <div className="bg-surface-container-lowest rounded-xl p-space-md shadow-sm border border-surface-variant/40 space-y-space-md">
         <div className="flex items-start gap-space-md">
           <div className="relative shrink-0">
             <img
               alt={currentWorker.name}
-              className="w-20 h-20 rounded-lg object-cover bg-surface-container border border-surface-variant"
+              className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl object-cover bg-surface-container border border-surface-variant/40"
               src={currentWorker.detailAvatar || currentWorker.avatar}
             />
             <div className="absolute -bottom-1 -right-1 bg-primary text-on-primary rounded-full p-0.5 shadow-sm flex items-center justify-center">

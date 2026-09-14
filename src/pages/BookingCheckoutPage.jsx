@@ -51,7 +51,7 @@ export const BookingCheckoutPage = () => {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-layout-margin-mobile py-space-md flex flex-col gap-3 pb-32 animate-fade-in">
+    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-3.5 pb-32 animate-fade-in">
       {/* 1. Booking Summary */}
       <section className="bg-surface-container-lowest rounded-2xl shadow-2xs border border-surface-variant/40 p-4 flex flex-col gap-3">
         <div className="flex items-center justify-between">

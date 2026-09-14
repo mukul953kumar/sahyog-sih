@@ -53,7 +53,7 @@ export const LoginPage = () => {
   };
 
   return (
-    <div className="w-full max-w-lg mx-auto px-layout-margin-mobile py-2 sm:py-4 flex flex-col gap-4 pb-24 animate-fade-in">
+    <div className="w-full max-w-2xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4 pb-24 animate-fade-in">
       {/* Hero Header */}
       <div className="flex flex-col gap-1 text-center sm:text-left">
         <div className="inline-flex items-center gap-1.5 self-center sm:self-start px-2.5 py-0.5 rounded-full bg-secondary-container text-on-secondary-container text-[11px] font-black">

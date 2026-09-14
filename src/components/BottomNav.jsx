@@ -4,38 +4,36 @@ import { useApp } from '../context/AppContext';
 export const BottomNav = () => {
   const { t, currentView, navigateTo, bookings, userRole } = useApp();
 
-  const activeEscrowBookings = bookings.filter((b) => b.status === 'escrow_locked').length;
+  const activeEscrowBookings = (bookings || []).filter((b) => b.status === 'escrow_locked').length;
 
   let tabs = [];
 
   if (userRole === 'worker') {
     tabs = [
-      { id: 'worker-dashboard', label: t('navWorkerDash'), icon: 'engineering' },
-      { id: 'home', label: t('navHome'), icon: 'home' },
-      { id: 'bookings', label: t('navBookings'), icon: 'event_note', badge: activeEscrowBookings },
-      { id: 'community', label: t('navCommunity'), icon: 'diversity_3' },
-      { id: 'profile', label: t('navProfile'), icon: 'person' },
+      { id: 'worker-dashboard', label: 'Worker Hub', icon: 'engineering' },
+      { id: 'bookings', label: 'Jobs & Payouts', icon: 'event_note', badge: activeEscrowBookings },
+      { id: 'community', label: 'Guild Ledger', icon: 'diversity_3' },
+      { id: 'profile', label: 'My Profile', icon: 'person' },
     ];
   } else if (userRole === 'admin') {
     tabs = [
-      { id: 'admin-dashboard', label: t('navAdminDash'), icon: 'admin_panel_settings' },
-      { id: 'home', label: t('navHome'), icon: 'home' },
-      { id: 'bookings', label: t('navBookings'), icon: 'event_note', badge: activeEscrowBookings },
-      { id: 'community', label: t('navCommunity'), icon: 'diversity_3' },
-      { id: 'profile', label: t('navProfile'), icon: 'person' },
+      { id: 'admin-dashboard', label: 'Admin Console', icon: 'admin_panel_settings' },
+      { id: 'bookings', label: 'Disputes & Vault', icon: 'gavel', badge: activeEscrowBookings },
+      { id: 'community', label: 'Resolutions', icon: 'diversity_3' },
+      { id: 'profile', label: 'My Profile', icon: 'person' },
     ];
   } else {
     tabs = [
-      { id: 'home', label: t('navHome'), icon: 'home' },
-      { id: 'workers', label: t('navServices'), icon: 'grid_view' },
-      { id: 'bookings', label: t('navBookings'), icon: 'event_note', badge: activeEscrowBookings },
-      { id: 'community', label: t('navCommunity'), icon: 'diversity_3' },
-      { id: 'profile', label: t('navProfile'), icon: 'person' },
+      { id: 'home', label: t('navHome') || 'Home', icon: 'home' },
+      { id: 'workers', label: t('navServices') || 'Services', icon: 'grid_view' },
+      { id: 'bookings', label: t('navBookings') || 'Bookings', icon: 'event_note', badge: activeEscrowBookings },
+      { id: 'community', label: t('navCommunity') || 'Ledger', icon: 'diversity_3' },
+      { id: 'profile', label: t('navProfile') || 'Profile', icon: 'person' },
     ];
   }
 
   return (
-    <nav className="fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-variant/50 pb-safe shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-40 bg-surface-container-lowest/95 backdrop-blur-xl border-t border-surface-variant/50 pb-safe shadow-[0_-2px_12px_rgba(0,0,0,0.06)]">
       <div className="max-w-2xl mx-auto flex items-center justify-around h-16 px-1 sm:px-3">
         {tabs.map((tab) => {
           const isActive =
