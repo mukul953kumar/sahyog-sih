@@ -208,6 +208,8 @@ export const AppProvider = ({ children }) => {
   const [digiLockerWorkerModal, setDigiLockerWorkerModal] = useState(null);
   const [voiceSearchModalOpen, setVoiceSearchModalOpen] = useState(false);
   const [disputeModalBooking, setDisputeModalBooking] = useState(null);
+  const [otpRefusalModalBooking, setOtpRefusalModalBooking] = useState(null);
+  const [wardAuditModalBooking, setWardAuditModalBooking] = useState(null);
   const [auditReportModalOpen, setAuditReportModalOpen] = useState(false);
   const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
   const [skillAssessmentModalWorker, setSkillAssessmentModalWorker] = useState(null);
@@ -334,6 +336,157 @@ export const AppProvider = ({ children }) => {
             status: resolutionType === 'refund_customer' ? 'refunded' : 'released',
             disputeResolution: resolutionType,
           };
+        }
+        return b;
+      })
+    );
+  };
+
+  // --- WORKER ESCROW PROTECTION: CUSTOMER REFUSED OTP CLAIM ---
+  const submitOtpRefusalClaim = (bookingId, claimData) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          return {
+            ...b,
+            status: 'otp_refused',
+            otpRefusalDetails: {
+              ...claimData,
+              claimDate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+              autoReleaseInHours: 2,
+              autoReleaseTimestamp: Date.now() + 2 * 60 * 60 * 1000,
+            },
+            timeline: [
+              ...b.timeline,
+              {
+                step: 4,
+                title: `Proof of Work Claim Logged (${claimData.reason}) • 2-Hour Auto-Release Protection Active`,
+                status: 'pending',
+                time: 'Just now',
+              },
+            ],
+          };
+        }
+        return b;
+      })
+    );
+  };
+
+  // Admin / Cooperative Chapter 1-Click Approval for OTP Refusal Claim
+  const adminApproveOtpRefusal = (bookingId) => {
+    let releasedAmount = 0;
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          releasedAmount = b.labourAmount || b.totalEscrow || 450;
+          return {
+            ...b,
+            status: 'released',
+            settlementRef: 'Direct Bank Settlement - Chapter Admin Proof Verified (UTR #CB-994801)',
+            disputeResolution: 'worker_approved_proof',
+            timeline: b.timeline.map((step) => ({ ...step, status: 'completed' })),
+          };
+        }
+        return b;
+      })
+    );
+
+    if (releasedAmount > 0) {
+      setWorkerEarnings((prev) => ({
+        ...prev,
+        today: prev.today + releasedAmount,
+        week: prev.week + releasedAmount,
+        jobsToday: prev.jobsToday + 1,
+      }));
+    }
+  };
+
+  // --- CUSTOMER 1-CLICK FAKE CLAIM DISPUTE & WARD COORDINATOR AUDIT TRIGGER ---
+  const triggerCustomerFakeClaimDispute = (bookingId, reason = 'Worker submitted fake proof without doing work') => {
+    let targetBooking = null;
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          const updated = {
+            ...b,
+            status: 'disputed',
+            wardAuditActive: true,
+            disputeReason: reason,
+            disputeDate: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            wardCoordinator: {
+              name: 'Rajendra Shukla',
+              trade: 'Senior Electrician & Co-op Warden',
+              phone: '94151 88201',
+              ward: 'Ward 112',
+              distance: '0.6 km',
+              avatar: 'https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80',
+            },
+            timeline: [
+              ...b.timeline,
+              {
+                step: 5,
+                title: `Counter-Dispute: Fake Claim Flagged • Escrow Frozen & Ward 112 Warden Assigned for Video Audit`,
+                status: 'completed',
+                time: 'Just now',
+              },
+            ],
+          };
+          targetBooking = updated;
+          return updated;
+        }
+        return b;
+      })
+    );
+
+    if (targetBooking) {
+      setWardAuditModalBooking(targetBooking);
+    }
+  };
+
+  // Ward Coordinator Resolves Audit (Instant Refund or Replacement)
+  const resolveWardAudit = (bookingId, resolutionType) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          if (resolutionType === 'refund_customer') {
+            return {
+              ...b,
+              status: 'refunded',
+              wardAuditActive: false,
+              disputeResolution: 'ward_confirmed_fake_claim_refunded',
+              refundAmount: b.totalEscrow || 450,
+              cancellationReason: 'Ward Coordinator Video Audit Confirmed Incomplete/Fake Work • 100% Escrow Reversed',
+              timeline: [
+                ...b.timeline,
+                {
+                  step: 6,
+                  title: `Ward Video Audit Confirmed • 100% Escrow (₹${b.totalEscrow || 450}) Reversed to Customer UPI`,
+                  status: 'completed',
+                  time: 'Just now',
+                },
+              ],
+            };
+          } else if (resolutionType === 'dispatch_peer') {
+            return {
+              ...b,
+              status: 'escrow_locked',
+              wardAuditActive: false,
+              workerId: 'arif-khan-plumber',
+              workerName: 'Arif Khan (Senior Co-Owner)',
+              workerTrade: 'Master Technician • Co-Owner #SLN-108',
+              workerAvatar: 'https://images.unsplash.com/photo-1540569014015-19a7be504e3a?w=400&auto=format&fit=crop&q=80',
+              workerPhone: '98451 22891',
+              timeline: [
+                ...b.timeline,
+                {
+                  step: 6,
+                  title: `Replacement Peer Arif Khan Dispatched by Ward Warden • Zero Extra Charge`,
+                  status: 'completed',
+                  time: 'Just now',
+                },
+              ],
+            };
+          }
         }
         return b;
       })
@@ -878,6 +1031,14 @@ export const AppProvider = ({ children }) => {
         setVoiceSearchModalOpen,
         disputeModalBooking,
         setDisputeModalBooking,
+        otpRefusalModalBooking,
+        setOtpRefusalModalBooking,
+        submitOtpRefusalClaim,
+        adminApproveOtpRefusal,
+        wardAuditModalBooking,
+        setWardAuditModalBooking,
+        triggerCustomerFakeClaimDispute,
+        resolveWardAudit,
         auditReportModalOpen,
         setAuditReportModalOpen,
         invoiceModalBooking,

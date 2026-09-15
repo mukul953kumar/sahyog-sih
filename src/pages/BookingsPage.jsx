@@ -15,6 +15,12 @@ export const BookingsPage = () => {
     setInvoiceModalBooking,
     setCancelModalBooking,
     setReassignModalBooking,
+    setOtpRefusalModalBooking,
+    adminApproveOtpRefusal,
+    wardAuditModalBooking,
+    setWardAuditModalBooking,
+    triggerCustomerFakeClaimDispute,
+    resolveWardAudit,
     t,
     userRole,
     currentWorker,
@@ -47,6 +53,7 @@ export const BookingsPage = () => {
     return roleBookings.filter((b) => {
       // Tab filter
       if (activeTab === 'locked' && b.status !== 'escrow_locked') return false;
+      if (activeTab === 'otp_refused' && b.status !== 'otp_refused') return false;
       if (activeTab === 'completed' && b.status !== 'released') return false;
       if (activeTab === 'refunded' && b.status !== 'refunded') return false;
       if (activeTab === 'disputed' && b.status !== 'disputed') return false;
@@ -352,6 +359,12 @@ export const BookingsPage = () => {
               icon: 'lock_clock',
             },
             {
+              id: 'otp_refused',
+              label: isHindi ? 'साक्ष्य / OTP विवाद' : 'Proof / OTP Refusal',
+              count: roleBookings.filter((b) => b.status === 'otp_refused').length,
+              icon: 'shield_with_heart',
+            },
+            {
               id: 'completed',
               label: isHindi ? 'बैंक में 100% भुगतान' : '100% Paid to Bank',
               count: roleBookings.filter((b) => b.status === 'released').length,
@@ -443,6 +456,7 @@ export const BookingsPage = () => {
         ) : (
           filteredBookings.map((b) => {
             const isLocked = b.status === 'escrow_locked';
+            const isOtpRefused = b.status === 'otp_refused';
             const isDisputed = b.status === 'disputed';
             const isRefunded = b.status === 'refunded';
             const isReleased = b.status === 'released';
@@ -726,6 +740,20 @@ export const BookingsPage = () => {
                           </div>
                         )}
 
+                        {/* Secondary Worker Action: Report OTP Refusal with Photo Proof */}
+                        <button
+                          type="button"
+                          onClick={() => setOtpRefusalModalBooking(b)}
+                          className="w-full py-2 px-3 rounded-xl bg-amber-100/90 hover:bg-amber-200 border border-amber-300 font-bold text-amber-950 flex items-center justify-center gap-1.5 text-xs transition-colors active:scale-95 shadow-2xs"
+                        >
+                          <span className="material-symbols-outlined text-[16px] text-amber-800">shield_with_heart</span>
+                          <span>
+                            {isHindi
+                              ? 'ग्राहक ने OTP नहीं दिया? (साक्ष्य व दावा जमा करें)'
+                              : 'Customer Refused OTP? (Submit Proof of Work)'}
+                          </span>
+                        </button>
+
                         {/* Worker Action Buttons */}
                         <div className="grid grid-cols-2 gap-2 pt-1 border-t border-amber-500/20 text-xs">
                           <button
@@ -814,16 +842,145 @@ export const BookingsPage = () => {
 
                 {/* 4. If Disputed */}
                 {isDisputed && (
-                  <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-950 space-y-1.5">
-                    <div className="font-bold flex items-center gap-1.5 text-rose-900">
-                      <span className="material-symbols-outlined text-[18px]">gavel</span>
-                      <span>{isHindi ? `सहकारी मध्यस्थता सक्रिय: ${b.disputeReason}` : `Cooperative Mediation Active: ${b.disputeReason}`}</span>
+                  <div className="p-3.5 bg-rose-50 rounded-2xl border-2 border-rose-300 text-xs text-rose-950 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-xl bg-rose-600 text-white flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[18px]">gavel</span>
+                        </span>
+                        <div>
+                          <span className="font-extrabold text-xs sm:text-sm text-rose-950 block">
+                            {b.wardAuditActive
+                              ? isHindi ? 'वार्ड 112 कोऑर्डिनेटर लाइव वीडियो व स्पॉट जांच सक्रिय' : 'Ward 112 Coordinator Video & Site Audit Active'
+                              : isHindi ? `सहकारी मध्यस्थता सक्रिय: ${b.disputeReason}` : `Cooperative Mediation Active: ${b.disputeReason}`}
+                          </span>
+                          <span className="text-[11px] text-rose-800 font-medium">
+                            {b.disputeReason}
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-black uppercase bg-rose-200 text-rose-900 px-2 py-0.5 rounded-md border border-rose-300 shrink-0">
+                        Escrow Frozen
+                      </span>
                     </div>
+
+                    {b.wardAuditActive && (
+                      <div className="p-3 bg-white rounded-xl border border-rose-200 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                        <div className="flex items-center gap-2.5">
+                          <img
+                            src="https://images.unsplash.com/photo-1544005313-94ddf0286df2?w=400&auto=format&fit=crop&q=80"
+                            alt="Warden"
+                            className="w-10 h-10 rounded-xl object-cover border border-rose-300 shrink-0"
+                          />
+                          <div>
+                            <span className="font-extrabold text-slate-900 text-xs block">
+                              Assigned Warden: Rajendra Shukla
+                            </span>
+                            <span className="text-[11px] text-slate-500">
+                              Ward 112 • 0.6 km away • Phone: 94151 88201
+                            </span>
+                          </div>
+                        </div>
+
+                        <div className="flex items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => setWardAuditModalBooking(b)}
+                            className="flex-1 sm:flex-none px-3.5 py-2 rounded-xl bg-red-600 hover:bg-red-700 text-white font-bold text-xs flex items-center justify-center gap-1 shadow-xs active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">videocam</span>
+                            <span>{isHindi ? '2-मिनट वीडियो कॉल शुरू करें' : 'Open 2-Min Video Audit'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
                     <p className="text-[11px] text-rose-800 leading-relaxed">
                       {isHindi
-                        ? 'एस्क्रो राशि सहकारी तिजोरी में सुरक्षित रूप से फ्रीज है। जिला चैप्टर रजिस्ट्रार 24 घंटे में समाधान जारी करेंगे।'
-                        : 'Escrow funds safely frozen in cooperative vault. District Chapter Registrar is reviewing resolution within 24 hours.'}
+                        ? 'एस्क्रो राशि सहकारी तिजोरी में सुरक्षित रूप से फ्रीज है। ऑटो-रिलीज टाइमर रोक दिया गया है।'
+                        : 'Escrow funds safely frozen in cooperative vault. Auto-release timer has been stopped.'}
                     </p>
+                  </div>
+                )}
+
+                {/* 5. If OTP Refused (Worker Proof-of-Work Protection Flow) */}
+                {isOtpRefused && (
+                  <div className="p-3.5 bg-gradient-to-br from-amber-50 to-orange-50/80 rounded-2xl border-2 border-amber-400 text-xs text-amber-950 space-y-2.5">
+                    <div className="flex items-start justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center shrink-0 font-bold">
+                          <span className="material-symbols-outlined text-[18px]">shield_with_heart</span>
+                        </span>
+                        <div>
+                          <span className="font-extrabold text-xs sm:text-sm text-amber-950 block">
+                            {isHindi ? 'साक्ष्य-आधारित एस्क्रो दावा (2-घंटे ऑटो-रिलीज सक्रिय)' : 'Proof-Based Claim (2-Hour Auto-Release Active)'}
+                          </span>
+                          <span className="text-[11px] text-amber-800 font-medium">
+                            Reason: <strong>{b.otpRefusalDetails?.reason || 'Customer refused PIN'}</strong>
+                          </span>
+                        </div>
+                      </div>
+
+                      <span className="text-[10px] font-mono font-black uppercase bg-amber-200 text-amber-900 px-2 py-0.5 rounded-md border border-amber-300 shrink-0 animate-pulse">
+                        ⏱️ 2h Timer Active
+                      </span>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2 text-[11px] bg-white/80 p-2.5 rounded-xl border border-amber-200">
+                      <div className="flex items-center gap-1.5 text-emerald-800 font-bold">
+                        <span className="material-symbols-outlined text-[15px] text-emerald-600">location_on</span>
+                        <span>GPS Verified ({b.otpRefusalDetails?.gpsStayMinutes || 46} mins on-site)</span>
+                      </div>
+                      <div className="flex items-center gap-1.5 text-slate-700 font-bold">
+                        <span className="material-symbols-outlined text-[15px] text-primary">photo_camera</span>
+                        <span>{b.otpRefusalDetails?.photos?.length || 2} Photos Attached ✓</span>
+                      </div>
+                    </div>
+
+                    {!isWorker ? (
+                      // Customer Action under OTP Refusal
+                      <div className="space-y-2 pt-1 border-t border-amber-300">
+                        <p className="text-[11px] text-amber-900 leading-snug">
+                          {isHindi
+                            ? `तकनीशियन ने कार्य पूर्णता का साक्ष्य सबमिट किया है। यदि आप संतुष्ट हैं तो नीचे दिए पिन से भुगतान रिलीज करें, अथवा 2 घंटे के भीतर वैध आपत्ति दर्ज करें।`
+                            : `Technician has submitted GPS & photo proof of work completion. Please verify release PIN below or lodge a formal objection within 2 hours.`}
+                        </p>
+                        <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-2">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              releaseEscrow(b.id);
+                              soundEffects.playCashPayoutChime();
+                            }}
+                            className="flex-1 h-10 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1 shadow-xs active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[15px]">verified</span>
+                            <span>{isHindi ? `पिन ${b.releaseOtp} सत्यापित करें व भुगतान करें` : `Verify PIN ${b.releaseOtp} & Release`}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => triggerCustomerFakeClaimDispute(b.id, 'Worker submitted fake proof without completing work')}
+                            className="px-3.5 h-10 bg-red-600 hover:bg-red-700 text-white rounded-xl font-black text-xs flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-sm"
+                            title="Instant freeze escrow and summon Ward Coordinator for 2-min video audit"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">videocam</span>
+                            <span>{isHindi ? '🚨 फर्जी क्लेम - तुरंत रोकें व वीडियो जांच करें' : '🚨 Fake Claim / Incomplete (Stop & Video Audit)'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      // Worker View under OTP Refusal
+                      <div className="pt-1 border-t border-amber-300 flex items-center justify-between text-[11px] text-amber-900">
+                        <span className="flex items-center gap-1 font-bold">
+                          <span className="material-symbols-outlined text-[15px] text-emerald-700">lock</span>
+                          <span>₹{b.labourAmount} RBI एस्क्रो तिजोरी में सुरक्षित फ्रीज है</span>
+                        </span>
+                        <span className="text-amber-800 font-medium">
+                          {isHindi ? 'चैप्टर एडमिन समीक्षा जारी' : 'Chapter Admin Reviewing'}
+                        </span>
+                      </div>
+                    )}
                   </div>
                 )}
               </article>

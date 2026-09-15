@@ -9,6 +9,9 @@ export const JuryDemoBar = () => {
     openLiveTracking,
     bookings,
     claimEscrowWithPin,
+    submitOtpRefusalClaim,
+    triggerCustomerFakeClaimDispute,
+    setWardAuditModalBooking,
     setInvoiceModalBooking,
     setAuditReportModalOpen,
     navigateTo,
@@ -72,6 +75,39 @@ export const JuryDemoBar = () => {
     showNotice('Step 4: Transparent Cooperative Society Ledger & Tax-Free Invoice generated.');
   };
 
+  // Edge Case Demo 1: Customer Refused PIN & Worker Proof Flow
+  const handleOtpRefusalDemo = () => {
+    switchRole('worker');
+    navigateTo('bookings');
+    const targetBooking = bookings.find((b) => b.status === 'escrow_locked') || bookings[0];
+    if (targetBooking) {
+      submitOtpRefusalClaim(targetBooking.id, {
+        reason: 'Customer demanding extra unpaid work',
+        notes: 'Completed full switchboard wiring. Customer refused to share 4-digit PIN.',
+        photos: [
+          'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
+          'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80',
+        ],
+        gpsStayMinutes: 48,
+        audioProof: true,
+      });
+      soundEffects.playRadarBlip();
+      showNotice('Edge Case 1: Worker Proof submitted with 2-Hour Auto-Release Protection!');
+    }
+  };
+
+  // Edge Case Demo 2: Customer Flags Fake Claim -> 2-Min Live Video Audit
+  const handleFakeClaimAuditDemo = () => {
+    switchRole('customer');
+    navigateTo('bookings');
+    const targetBooking = bookings.find((b) => b.status === 'otp_refused' || b.status === 'escrow_locked') || bookings[0];
+    if (targetBooking) {
+      triggerCustomerFakeClaimDispute(targetBooking.id, 'Worker submitted fake proof without doing work');
+      soundEffects.playRadarBlip();
+      showNotice('Edge Case 2: Escrow Frozen! Ward 112 Warden Assigned for 2-Minute Live Video Audit.');
+    }
+  };
+
   if (!isOpen) {
     return (
       <button
@@ -99,16 +135,34 @@ export const JuryDemoBar = () => {
             🏆 SIH Jury Guided Demo Pitch
           </span>
           <span className="hidden sm:inline text-slate-400 text-[11px]">
-            • 4-Step 90-Second Walkthrough
+            • 4 Steps + Anti-Fraud Video Defense
           </span>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 sm:gap-2">
           {demoNotice && (
-            <span className="text-[11px] text-emerald-400 font-bold bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-md truncate max-w-[240px] sm:max-w-[320px]">
+            <span className="text-[11px] text-emerald-400 font-bold bg-emerald-950/80 border border-emerald-500/40 px-2 py-0.5 rounded-md truncate max-w-[180px] sm:max-w-[280px]">
               {demoNotice}
             </span>
           )}
+          <button
+            type="button"
+            onClick={handleOtpRefusalDemo}
+            className="px-2 py-1 rounded-lg bg-amber-400/20 hover:bg-amber-400/30 text-amber-300 border border-amber-400/40 font-bold text-[10px] flex items-center gap-1 transition-all active:scale-95"
+            title="Simulate edge-case when customer refuses to give completion PIN"
+          >
+            <span className="material-symbols-outlined text-[13px]">shield_with_heart</span>
+            <span>OTP Refusal</span>
+          </button>
+          <button
+            type="button"
+            onClick={handleFakeClaimAuditDemo}
+            className="px-2 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 border border-red-500/40 font-bold text-[10px] flex items-center gap-1 transition-all active:scale-95"
+            title="Simulate 2-minute live video audit when customer reports fake claim"
+          >
+            <span className="material-symbols-outlined text-[13px]">videocam</span>
+            <span>Video Audit</span>
+          </button>
           <button
             type="button"
             onClick={() => setIsOpen(false)}

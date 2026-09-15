@@ -14,6 +14,9 @@ export const AdminDashboardPage = () => {
     bookings,
     adminResolveDispute,
     raiseDispute,
+    adminApproveOtpRefusal,
+    submitOtpRefusalClaim,
+    setWardAuditModalBooking,
     setAuditReportModalOpen,
     setSkillAssessmentModalWorker,
   } = useApp();
@@ -25,6 +28,7 @@ export const AdminDashboardPage = () => {
   const [resolutionFeedback, setResolutionFeedback] = useState('');
 
   const disputedBookings = (bookings || []).filter((b) => b.status === 'disputed');
+  const otpRefusedBookings = (bookings || []).filter((b) => b.status === 'otp_refused');
 
   const handleResolve = (bookingId, type) => {
     adminResolveDispute(bookingId, type);
@@ -33,6 +37,12 @@ export const AdminDashboardPage = () => {
         ? `Escrow refunded 100% to Customer (Zero Fees Deducted)!`
         : `Escrow released directly to Worker's bank account!`
     );
+    setTimeout(() => setResolutionFeedback(''), 4000);
+  };
+
+  const handleApproveOtpClaim = (bookingId) => {
+    adminApproveOtpRefusal(bookingId);
+    setResolutionFeedback(`✓ Proof Verified! 100% Escrow released directly to Worker's Canara Bank account (₹0 commission).`);
     setTimeout(() => setResolutionFeedback(''), 4000);
   };
 
@@ -125,16 +135,180 @@ export const AdminDashboardPage = () => {
 
         <div className="bg-surface-container-lowest p-4 rounded-2xl border border-surface-variant/30 flex flex-col shadow-2xs">
           <span className="text-xs font-bold text-on-surface-variant uppercase">
-            Active Disputes
+            Disputes & Claims
           </span>
           <span className="text-2xl font-black text-on-surface mt-1">
-            {disputedBookings.length}
+            {disputedBookings.length + otpRefusedBookings.length}
           </span>
-          <span className="text-xs text-secondary font-bold mt-0.5">
-            {disputedBookings.length > 0 ? 'Requires Action' : 'Zero Active'}
+          <span className="text-xs text-amber-700 font-bold mt-0.5">
+            {otpRefusedBookings.length > 0 ? `${otpRefusedBookings.length} OTP Claims Active` : disputedBookings.length > 0 ? 'Requires Action' : 'Zero Active'}
           </span>
         </div>
       </div>
+
+      {/* 2.5 WORKER PROTECTION: OTP REFUSAL & PROOF-BASED CLAIMS DESK */}
+      <section className="bg-gradient-to-br from-amber-500/10 via-white to-amber-500/5 rounded-3xl p-4 sm:p-5 shadow-sm border-2 border-amber-400/80 flex flex-col gap-3.5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2 text-amber-800">
+            <span className="w-8 h-8 rounded-xl bg-amber-500 text-slate-950 flex items-center justify-center font-bold">
+              <span className="material-symbols-outlined text-[18px]">shield_with_heart</span>
+            </span>
+            <div>
+              <h3 className="font-extrabold text-base text-slate-900">
+                Worker Escrow Protection: OTP Refusal Claims
+              </h3>
+              <p className="text-xs text-slate-500">
+                Review GPS duration, photo evidence, and 1-click release escrow when customers withhold PIN
+              </p>
+            </div>
+          </div>
+          <span className={`text-xs font-mono font-black px-2.5 py-1 rounded-xl ${
+            otpRefusedBookings.length > 0
+              ? 'bg-amber-400 text-slate-950 animate-bounce'
+              : 'bg-slate-100 text-slate-700'
+          }`}>
+            {otpRefusedBookings.length} Active Claim{otpRefusedBookings.length === 1 ? '' : 's'}
+          </span>
+        </div>
+
+        {otpRefusedBookings.length === 0 ? (
+          <div className="p-4 rounded-2xl bg-white border border-amber-200/80 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+            <div className="flex items-center gap-3">
+              <span className="material-symbols-outlined text-3xl text-emerald-600">verified</span>
+              <div>
+                <h4 className="font-bold text-xs sm:text-sm text-slate-900">
+                  All Active Orders Verified with PIN
+                </h4>
+                <p className="text-xs text-slate-500">
+                  No pending OTP refusal claims from technicians right now.
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => {
+                const targetBooking = bookings[0]?.id || 'SHG-8821';
+                submitOtpRefusalClaim(targetBooking, {
+                  reason: 'Customer demanding extra unpaid work',
+                  notes: 'Completed full switchboard wiring. Customer refused to share 4-digit PIN.',
+                  photos: [
+                    'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
+                    'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80',
+                  ],
+                  gpsStayMinutes: 48,
+                  audioProof: true,
+                });
+              }}
+              className="px-4 py-2 rounded-xl bg-amber-500 hover:bg-amber-600 text-slate-950 font-black text-xs flex items-center gap-1.5 transition-all active:scale-95 shadow-2xs shrink-0"
+            >
+              <span className="material-symbols-outlined text-[16px]">play_circle</span>
+              <span>Simulate Customer Refusing OTP (Jury Demo)</span>
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {otpRefusedBookings.map((b) => (
+              <div
+                key={b.id}
+                className="p-4 rounded-2xl bg-white border-2 border-amber-300 shadow-sm flex flex-col gap-3"
+              >
+                <div className="flex flex-col sm:flex-row sm:items-start justify-between gap-2">
+                  <div>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xs font-mono font-black text-amber-900 bg-amber-100 px-2 py-0.5 rounded-md border border-amber-300">
+                        Claim #{b.id}
+                      </span>
+                      <span className="text-xs font-bold text-slate-700">
+                        {b.serviceTitle}
+                      </span>
+                    </div>
+                    <p className="text-xs text-slate-600 mt-1">
+                      Technician: <strong>{b.workerName}</strong> • Customer: <strong>{b.customerName || 'Priya Sharma'}</strong> ({b.address})
+                    </p>
+                  </div>
+
+                  <div className="text-right shrink-0">
+                    <span className="text-lg font-black text-primary font-mono block">
+                      ₹{b.labourAmount || b.totalEscrow}
+                    </span>
+                    <span className="text-[10px] text-amber-900 bg-amber-200/80 font-bold px-2 py-0.5 rounded-md">
+                      2h Auto-Release Active
+                    </span>
+                  </div>
+                </div>
+
+                {/* Evidence Strip: Reason, GPS stayed, Photos */}
+                <div className="p-3 bg-amber-50/70 rounded-xl border border-amber-200 text-xs flex flex-col gap-2">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-1.5">
+                    <span className="font-bold text-amber-950">
+                      Reason: <span className="font-normal text-amber-900">{b.otpRefusalDetails?.reason || 'Customer refused PIN'}</span>
+                    </span>
+                    <span className="text-emerald-800 font-bold flex items-center gap-1 text-[11px]">
+                      <span className="material-symbols-outlined text-[15px] text-emerald-600">location_on</span>
+                      <span>GPS Stay: {b.otpRefusalDetails?.gpsStayMinutes || 48} mins (&lt;15m distance ✓)</span>
+                    </span>
+                  </div>
+
+                  {b.otpRefusalDetails?.notes && (
+                    <p className="text-[11px] text-slate-700 italic bg-white p-2 rounded-lg border border-amber-200/70">
+                      "{b.otpRefusalDetails.notes}"
+                    </p>
+                  )}
+
+                  {/* Photo Thumbnails */}
+                  <div className="flex items-center gap-2 pt-1">
+                    <span className="text-[11px] font-bold text-slate-700 shrink-0">Attached Evidence:</span>
+                    <div className="flex items-center gap-2 overflow-x-auto">
+                      {(b.otpRefusalDetails?.photos || [
+                        'https://images.unsplash.com/photo-1621905251189-08b45d6a269e?w=500&auto=format&fit=crop&q=80',
+                        'https://images.unsplash.com/photo-1581092160607-ee22621dd758?w=500&auto=format&fit=crop&q=80',
+                      ]).map((imgUrl, i) => (
+                        <a
+                          key={i}
+                          href={imgUrl}
+                          target="_blank"
+                          rel="noreferrer"
+                          className="w-12 h-12 rounded-lg overflow-hidden border border-slate-300 shrink-0 hover:opacity-80 transition-opacity"
+                          title="Click to view full photo proof"
+                        >
+                          <img src={imgUrl} alt={`Proof ${i + 1}`} className="w-full h-full object-cover" />
+                        </a>
+                      ))}
+                      <span className="text-[10px] text-emerald-700 bg-emerald-100 font-bold px-2 py-1 rounded-md">
+                        10s Audio Memo ✓
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Admin Actions */}
+                <div className="flex flex-col sm:flex-row items-center gap-2 pt-1">
+                  <button
+                    type="button"
+                    onClick={() => handleApproveOtpClaim(b.id)}
+                    className="w-full sm:flex-1 h-10 rounded-xl bg-emerald-700 hover:bg-emerald-800 text-white font-black text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-[16px]">verified</span>
+                    <span>Approve & Release 100% Escrow to Worker (₹0 Cut)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setResolutionFeedback(`Nearby Guild Peer representative dispatched to site for mediation.`);
+                      setTimeout(() => setResolutionFeedback(''), 4000);
+                    }}
+                    className="w-full sm:w-auto px-4 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-800 font-bold text-xs flex items-center justify-center gap-1 active:scale-95 transition-all border border-slate-200"
+                  >
+                    <span className="material-symbols-outlined text-[15px] text-amber-700">group</span>
+                    <span>Dispatch Peer Mediator</span>
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        )}
+      </section>
 
       {/* Responsive 2-Column Grid on Desktop: Left (Disputes) + Right (KYC Queue) */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -208,6 +382,21 @@ export const AdminDashboardPage = () => {
                   <div className="p-2.5 bg-white rounded-xl border border-error/20 text-xs">
                     <span className="text-on-surface-variant font-semibold block text-[11px]">Complaint:</span>
                     <p className="text-on-surface font-medium mt-0.5">{b.disputeReason}</p>
+                    {b.wardAuditActive && (
+                      <div className="mt-2 p-2 bg-red-50 rounded-lg border border-red-200 flex items-center justify-between gap-2">
+                        <span className="text-[11px] text-red-900 font-bold flex items-center gap-1">
+                          <span className="material-symbols-outlined text-[15px] text-red-600">videocam</span>
+                          <span>Ward 112 Video Audit Assigned ({b.wardCoordinator?.name || 'Rajendra Shukla'})</span>
+                        </span>
+                        <button
+                          type="button"
+                          onClick={() => setWardAuditModalBooking(b)}
+                          className="px-2.5 py-1 bg-red-600 hover:bg-red-700 text-white rounded-md text-[10px] font-bold"
+                        >
+                          Join/Inspect Call
+                        </button>
+                      </div>
+                    )}
                   </div>
 
                   <div className="flex items-center gap-2 pt-1">

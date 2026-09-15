@@ -16,6 +16,8 @@ import { LiveTrackingModal } from './components/LiveTrackingModal';
 import { InvoiceModal } from './components/InvoiceModal';
 import { CancelBookingModal } from './components/CancelBookingModal';
 import { ReassignWorkerModal } from './components/ReassignWorkerModal';
+import { OtpRefusalModal } from './components/OtpRefusalModal';
+import { WardAuditModal } from './components/WardAuditModal';
 
 import { HomePage } from './pages/HomePage';
 import { WorkersPage } from './pages/WorkersPage';
@@ -86,6 +88,8 @@ const AppContent = () => {
       <InvoiceModal />
       <CancelBookingModal />
       <ReassignWorkerModal />
+      <OtpRefusalModal />
+      <WardAuditModal />
     </div>
   );
 };

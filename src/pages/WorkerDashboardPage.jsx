@@ -21,6 +21,7 @@ export const WorkerDashboardPage = () => {
     setDigiLockerWorkerModal,
     setSkillAssessmentModalWorker,
     setReassignModalBooking,
+    setOtpRefusalModalBooking,
     language,
   } = useApp();
 
@@ -366,6 +367,28 @@ export const WorkerDashboardPage = () => {
                 <span>{claimResult.message}</span>
               </div>
             )}
+
+            {/* Helper Trigger if Customer Refuses PIN */}
+            <div className="pt-2 border-t border-slate-200/80">
+              <button
+                type="button"
+                onClick={() => {
+                  const targetBooking =
+                    bookings.find((b) => b.status === 'escrow_locked' || b.status === 'otp_refused') || bookings[0];
+                  if (targetBooking) {
+                    setOtpRefusalModalBooking(targetBooking);
+                  }
+                }}
+                className="w-full py-2 px-3 rounded-xl bg-amber-50 hover:bg-amber-100 border border-amber-300 text-amber-950 font-extrabold text-[11px] flex items-center justify-center gap-1.5 transition-all active:scale-95 shadow-2xs"
+              >
+                <span className="material-symbols-outlined text-[15px] text-amber-700">shield_with_heart</span>
+                <span>
+                  {isHindi
+                    ? 'ग्राहक ने OTP नहीं दिया? फ़ोटो व जीपीएस साक्ष्य सबमिट करें'
+                    : 'Customer Refusing PIN? Submit Geo & Photo Proof'}
+                </span>
+              </button>
+            </div>
           </section>
 
           {/* Card 2: Cooperative Wholesale Depot (Harmonious Card - No visual clash!) */}
