@@ -210,6 +210,7 @@ export const AppProvider = ({ children }) => {
   const [disputeModalBooking, setDisputeModalBooking] = useState(null);
   const [otpRefusalModalBooking, setOtpRefusalModalBooking] = useState(null);
   const [wardAuditModalBooking, setWardAuditModalBooking] = useState(null);
+  const [reviewModalBooking, setReviewModalBooking] = useState(null);
   const [auditReportModalOpen, setAuditReportModalOpen] = useState(false);
   const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
   const [skillAssessmentModalWorker, setSkillAssessmentModalWorker] = useState(null);
@@ -867,6 +868,111 @@ export const AppProvider = ({ children }) => {
     setAgreedLabourPrice(amount);
   };
 
+  // Enhanced free-form negotiation chat message
+  const sendNegotiationMessage = (text, customPrice = null) => {
+    const userMsg = {
+      id: `msg-${Date.now()}`,
+      sender: 'customer',
+      name: 'You',
+      text,
+      time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+    };
+
+    setNegotiationThread((prev) => [...prev, userMsg]);
+
+    // Check if price was offered in text (e.g. 400 or 420) or explicitly passed
+    const detectedPrice = customPrice || (text.match(/₹?\s*(\d{3,4})/) ? parseInt(text.match(/₹?\s*(\d{3,4})/)[1], 10) : null);
+
+    setTimeout(() => {
+      let workerReplyText = `Namaste ji! I have noted your message: "${text}". I will ensure high quality ISI certified tools are used.`;
+      if (detectedPrice && detectedPrice >= 200 && detectedPrice <= 2000) {
+        workerReplyText = `Ji bilkul! Deal lock karte hain ₹${detectedPrice} par. I will arrive at your address with full safety equipment.`;
+        const acceptedMsg = {
+          id: `msg-${Date.now() + 2}`,
+          sender: 'system',
+          name: 'System',
+          text: `Rate agreed at ₹${detectedPrice}`,
+          agreedPrice: detectedPrice,
+          time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        };
+        setAgreedLabourPrice(detectedPrice);
+        setNegotiationThread((prev) => [
+          ...prev,
+          {
+            id: `msg-${Date.now() + 1}`,
+            sender: 'worker',
+            name: `${currentWorker.name.split(' ')[0]} (Worker)`,
+            text: workerReplyText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+          acceptedMsg,
+        ]);
+      } else {
+        setNegotiationThread((prev) => [
+          ...prev,
+          {
+            id: `msg-${Date.now() + 1}`,
+            sender: 'worker',
+            name: `${currentWorker.name.split(' ')[0]} (Worker)`,
+            text: workerReplyText,
+            time: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+          },
+        ]);
+      }
+    }, 600);
+  };
+
+  // Submit customer review & rating for completed job
+  const submitBookingReview = (bookingId, reviewData) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          return {
+            ...b,
+            review: reviewData,
+          };
+        }
+        return b;
+      })
+    );
+
+    // If customer tipped worker, add tip to worker's earnings
+    if (reviewData.tip && reviewData.tip > 0) {
+      setWorkerEarnings((prev) => ({
+        ...prev,
+        today: prev.today + reviewData.tip,
+        week: prev.week + reviewData.tip,
+      }));
+    }
+
+    // Update worker rating dynamically in workersList
+    setWorkersList((prev) =>
+      prev.map((w) => {
+        if (w.id === currentWorker.id || w.name === currentWorker.name) {
+          const newReviewCount = (w.reviewsCount || 48) + 1;
+          const currentTotalScore = (w.rating || 4.9) * (w.reviewsCount || 48);
+          const newAvgRating = parseFloat(((currentTotalScore + reviewData.rating) / newReviewCount).toFixed(1));
+          return {
+            ...w,
+            rating: newAvgRating,
+            reviewsCount: newReviewCount,
+            reviews: [
+              {
+                user: 'Priya S.',
+                rating: reviewData.rating,
+                date: 'Today',
+                comment: reviewData.comment,
+                tags: reviewData.tags,
+              },
+              ...(w.reviews || []),
+            ],
+          };
+        }
+        return w;
+      })
+    );
+  };
+
   const createBooking = ({
     worker = currentWorker,
     serviceTitle = 'Direct Service',
@@ -1037,6 +1143,10 @@ export const AppProvider = ({ children }) => {
         adminApproveOtpRefusal,
         wardAuditModalBooking,
         setWardAuditModalBooking,
+        reviewModalBooking,
+        setReviewModalBooking,
+        submitBookingReview,
+        sendNegotiationMessage,
         triggerCustomerFakeClaimDispute,
         resolveWardAudit,
         auditReportModalOpen,

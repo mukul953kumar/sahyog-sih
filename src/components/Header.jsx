@@ -38,20 +38,20 @@ export const Header = () => {
       return [
         { id: 'worker-dashboard', label: 'Worker Hub', icon: 'engineering' },
         { id: 'bookings', label: 'Jobs & Payouts', icon: 'event_note', badge: activeEscrowBookings },
-        { id: 'community', label: 'Guild Ledger', icon: 'diversity_3' },
+        { id: 'community', label: 'Co-op Welfare', icon: 'shield_with_heart' },
       ];
     } else if (userRole === 'admin') {
       return [
         { id: 'admin-dashboard', label: 'Admin Console', icon: 'admin_panel_settings' },
         { id: 'bookings', label: 'Disputes & Escrow', icon: 'gavel', badge: activeEscrowBookings },
-        { id: 'community', label: 'Resolutions', icon: 'diversity_3' },
+        { id: 'community', label: 'Community & Welfare', icon: 'diversity_3' },
       ];
     } else {
       return [
         { id: 'home', label: 'Home', icon: 'home' },
         { id: 'workers', label: 'Services', icon: 'grid_view' },
         { id: 'bookings', label: 'Bookings', icon: 'event_note', badge: activeEscrowBookings },
-        { id: 'community', label: 'Public Ledger', icon: 'diversity_3' },
+        { id: 'community', label: 'Community & Welfare', icon: 'diversity_3' },
       ];
     }
   };
@@ -379,7 +379,7 @@ export const Header = () => {
                   { id: 'home', label: 'Home Page', icon: 'home' },
                   { id: 'workers', label: 'Services & Trades', icon: 'grid_view' },
                   { id: 'bookings', label: 'My Bookings & Vault', icon: 'event_note', badge: activeEscrowBookings },
-                  { id: 'community', label: 'Public Co-op Ledger', icon: 'diversity_3' },
+                  { id: 'community', label: 'Co-op Welfare & Benefits', icon: 'shield_with_heart' },
                   { id: 'worker-dashboard', label: 'Worker Operational Hub', icon: 'engineering' },
                   { id: 'admin-dashboard', label: 'Chapter Admin Console', icon: 'admin_panel_settings' },
                   { id: 'profile', label: 'Profile & Settings', icon: 'person' },
@@ -451,7 +451,7 @@ export const Header = () => {
                   className="w-full flex items-center gap-2.5 px-3 py-2.5 rounded-xl text-xs font-bold text-indigo-900 bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 transition-all"
                 >
                   <span className="material-symbols-outlined text-[18px]">analytics</span>
-                  <span>Transparent Co-op Audit Ledger</span>
+                  <span>Direct Bank Settlement Proofs</span>
                 </button>
 
                 <button

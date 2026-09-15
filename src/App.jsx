@@ -18,6 +18,7 @@ import { CancelBookingModal } from './components/CancelBookingModal';
 import { ReassignWorkerModal } from './components/ReassignWorkerModal';
 import { OtpRefusalModal } from './components/OtpRefusalModal';
 import { WardAuditModal } from './components/WardAuditModal';
+import { ReviewRatingModal } from './components/ReviewRatingModal';
 
 import { HomePage } from './pages/HomePage';
 import { WorkersPage } from './pages/WorkersPage';
@@ -90,6 +91,7 @@ const AppContent = () => {
       <ReassignWorkerModal />
       <OtpRefusalModal />
       <WardAuditModal />
+      <ReviewRatingModal />
     </div>
   );
 };

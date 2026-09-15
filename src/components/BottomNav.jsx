@@ -12,7 +12,7 @@ export const BottomNav = () => {
     tabs = [
       { id: 'worker-dashboard', label: 'Worker Hub', icon: 'engineering' },
       { id: 'bookings', label: 'Jobs & Payouts', icon: 'event_note', badge: activeEscrowBookings },
-      { id: 'community', label: 'Guild Ledger', icon: 'diversity_3' },
+      { id: 'community', label: 'Co-op Welfare', icon: 'shield_with_heart' },
       { id: 'profile', label: 'My Profile', icon: 'person' },
     ];
   } else if (userRole === 'admin') {
@@ -27,7 +27,7 @@ export const BottomNav = () => {
       { id: 'home', label: t('navHome') || 'Home', icon: 'home' },
       { id: 'workers', label: t('navServices') || 'Services', icon: 'grid_view' },
       { id: 'bookings', label: t('navBookings') || 'Bookings', icon: 'event_note', badge: activeEscrowBookings },
-      { id: 'community', label: t('navCommunity') || 'Ledger', icon: 'diversity_3' },
+      { id: 'community', label: t('navCommunity') || 'Community', icon: 'diversity_3' },
       { id: 'profile', label: t('navProfile') || 'Profile', icon: 'person' },
     ];
   }

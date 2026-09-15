@@ -146,7 +146,7 @@ export const TRANSLATIONS = {
     approveBtn: "Approve Member",
     rejectBtn: "Reject",
     disputeAuditTitle: "Live Disputes & Escrow Mediation",
-    exportLedgerBtn: "Export Audit Ledger (CSV/PDF)",
+    exportSettlementBtn: "Export Settlement Report (CSV)",
 
     // Voice Assistant
     voiceBannerTitle: "Sahyog AI Voice Assistant • Smart Voice Booking",
@@ -319,7 +319,7 @@ export const TRANSLATIONS = {
     approveBtn: "स्वीकृत करें",
     rejectBtn: "अस्वीकृत",
     disputeAuditTitle: "एस्क्रो विवाद निवारण एवं मध्यस्थता",
-    exportLedgerBtn: "सार्वजनिक ऑडिट खाता डाउनलोड करें",
+    exportSettlementBtn: "बैंक सेटलमेंट रिपोर्ट डाउनलोड करें",
 
     // Voice Assistant
     voiceBannerTitle: "सहयोग एआई वॉइस असिस्टेंट • AI Voice Booking",
@@ -492,7 +492,7 @@ export const TRANSLATIONS = {
     approveBtn: "ಅನುಮೋದಿಸಿ",
     rejectBtn: "ತಿರಸ್ಕರಿಸಿ",
     disputeAuditTitle: "ಎಸ್ಕ್ರೋ ವಿವಾದ ಇತ್ಯರ್ಥ & ಮಧ್ಯಸ್ಥಿಕೆ",
-    exportLedgerBtn: "ಲೆಕ್ಕಪರಿಶೋಧನಾ ವರದಿ ಡೌನ್‌ಲೋಡ್",
+    exportSettlementBtn: "ಸೆಟಲ್‌ಮೆಂಟ್ ವರದಿ ಡೌನ್‌ಲೋಡ್",
 
     // Voice Assistant
     voiceBannerTitle: "ಸಹಯೋಗ್ ಎಐ ವಾಯ್ಸ್ ಸಹಾಯಕ • Voice Booking",
@@ -665,7 +665,7 @@ export const TRANSLATIONS = {
     approveBtn: "मंजूर करा",
     rejectBtn: "नाकारा",
     disputeAuditTitle: "एस्क्रो वाद निवारण आणि मध्यस्थी",
-    exportLedgerBtn: "ऑडिट लेजर डाउनलोड करा",
+    exportSettlementBtn: "सेटलमेंट अहवाल डाउनलोड करा",
 
     // Voice Assistant
     voiceBannerTitle: "सहयोग एआय व्हॉइस असिस्टंट • Voice Booking",
@@ -838,7 +838,7 @@ export const TRANSLATIONS = {
     approveBtn: "ஒப்புதல் அளிக்கவும்",
     rejectBtn: "நிராகரிக்கவும்",
     disputeAuditTitle: "எஸ்க்ரோ சர்ச்சை தீர்வு & நடுவர் குழு",
-    exportLedgerBtn: "தணிக்கை அறிக்கையை பதிவிறக்கவும்",
+    exportSettlementBtn: "செட்டில்மென்ட் அறிக்கையை பதிவிறக்கவும்",
 
     // Voice Assistant
     voiceBannerTitle: "சஹயோக் AI வாய்ஸ் அசிஸ்டண்ட் • Voice Booking",

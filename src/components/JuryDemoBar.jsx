@@ -72,7 +72,7 @@ export const JuryDemoBar = () => {
       setAuditReportModalOpen(true);
     }
     soundEffects.playSuccessChime();
-    showNotice('Step 4: Transparent Cooperative Society Ledger & Tax-Free Invoice generated.');
+    showNotice('Step 4: 100% Direct Bank Settlement & Tax-Free Invoice generated.');
   };
 
   // Edge Case Demo 1: Customer Refused PIN & Worker Proof Flow

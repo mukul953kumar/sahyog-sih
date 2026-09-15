@@ -19,6 +19,7 @@ export const BookingsPage = () => {
     adminApproveOtpRefusal,
     wardAuditModalBooking,
     setWardAuditModalBooking,
+    setReviewModalBooking,
     triggerCustomerFakeClaimDispute,
     resolveWardAudit,
     t,
@@ -780,32 +781,93 @@ export const BookingsPage = () => {
 
                 {/* 2. If Released / Completed */}
                 {isReleased && (
-                  <div className="pt-3 border-t border-surface-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                    <div className="flex items-center gap-2 text-emerald-900 font-bold">
-                      <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
-                        <span className="material-symbols-outlined text-[16px]">check</span>
-                      </span>
-                      <div>
-                        <span className="block text-on-surface font-extrabold">
-                          {isHindi ? `₹${b.labourAmount} 100% मेहनताना बैंक में क्रेडिट` : `₹${b.labourAmount} 100% Remuneration Credited`}
+                  <div className="pt-3 border-t border-surface-variant/30 flex flex-col gap-2.5 text-xs">
+                    <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                      <div className="flex items-center gap-2 text-emerald-900 font-bold">
+                        <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                          <span className="material-symbols-outlined text-[16px]">check</span>
                         </span>
-                        <span className="text-[11px] text-emerald-700 font-mono">
-                          {b.settlementRef || (isHindi ? 'सीधा बैंक सेटलमेंट (UTR #CB-994102)' : 'Direct Bank Settlement (UTR #CB-994102)')}
-                        </span>
+                        <div>
+                          <span className="block text-on-surface font-extrabold">
+                            {isHindi ? `₹${b.labourAmount} 100% मेहनताना बैंक में क्रेडिट` : `₹${b.labourAmount} 100% Remuneration Credited`}
+                          </span>
+                          <span className="text-[11px] text-emerald-700 font-mono">
+                            {b.settlementRef || (isHindi ? 'सीधा बैंक सेटलमेंट (UTR #CB-994102)' : 'Direct Bank Settlement (UTR #CB-994102)')}
+                          </span>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 self-start sm:self-auto">
+                        {!isWorker && !b.review && (
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReviewModalBooking(b);
+                              soundEffects.playSuccessChime();
+                            }}
+                            className="px-3.5 py-2 bg-gradient-to-r from-amber-400 to-amber-500 hover:from-amber-500 hover:to-amber-600 text-slate-950 rounded-xl text-xs font-black flex items-center gap-1.5 active:scale-95 transition-all shadow-xs"
+                          >
+                            <span className="material-symbols-outlined text-[16px] material-symbols-fill">star</span>
+                            <span>{isHindi ? 'रेटिंग व समीक्षा दें' : 'Rate & Review'}</span>
+                          </button>
+                        )}
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setInvoiceModalBooking(b);
+                            soundEffects.playSuccessChime();
+                          }}
+                          className="px-3.5 py-2 bg-surface-container-low hover:bg-surface-container border border-surface-variant/40 rounded-xl text-xs font-bold text-primary flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-2xs"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                          <span>{isHindi ? 'टैक्स-फ्री रसीद' : 'Invoice'}</span>
+                        </button>
                       </div>
                     </div>
 
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setInvoiceModalBooking(b);
-                        soundEffects.playSuccessChime();
-                      }}
-                      className="px-4 py-2 bg-surface-container-low hover:bg-surface-container border border-surface-variant/40 rounded-xl text-xs font-bold text-primary flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-2xs self-start sm:self-auto"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">receipt_long</span>
-                      <span>{isHindi ? 'टैक्स-फ्री रसीद देखें' : 'View Tax-Free Invoice'}</span>
-                    </button>
+                    {/* Customer Review Summary if already reviewed */}
+                    {b.review && (
+                      <div className="p-3 bg-amber-50/80 rounded-2xl border border-amber-200 flex flex-col gap-1.5 text-xs text-amber-950">
+                        <div className="flex items-center justify-between">
+                          <div className="flex items-center gap-1">
+                            <span className="text-[11px] font-bold text-amber-900 mr-1">
+                              {isHindi ? 'आपकी समीक्षा:' : 'Your Rating:'}
+                            </span>
+                            {[...Array(b.review.rating || 5)].map((_, i) => (
+                              <span key={i} className="material-symbols-outlined text-[16px] text-amber-500 material-symbols-fill">star</span>
+                            ))}
+                            <span className="font-black text-amber-900 ml-1">({b.review.rating}/5)</span>
+                          </div>
+                          {!isWorker && (
+                            <button
+                              type="button"
+                              onClick={() => setReviewModalBooking(b)}
+                              className="text-[11px] font-bold text-primary hover:underline flex items-center gap-0.5"
+                            >
+                              <span className="material-symbols-outlined text-[13px]">edit</span>
+                              <span>{isHindi ? 'संपादित करें' : 'Edit'}</span>
+                            </button>
+                          )}
+                        </div>
+                        {b.review.comment && (
+                          <p className="text-[11px] text-slate-700 italic">"{b.review.comment}"</p>
+                        )}
+                        {b.review.tags && b.review.tags.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-0.5">
+                            {b.review.tags.map((tag, idx) => (
+                              <span key={idx} className="text-[9px] font-bold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-md border border-amber-200">
+                                {tag}
+                              </span>
+                            ))}
+                            {b.review.tip > 0 && (
+                              <span className="text-[9px] font-bold bg-emerald-100 text-emerald-900 px-2 py-0.5 rounded-md border border-emerald-200">
+                                +₹{b.review.tip} Tip Paid ✓
+                              </span>
+                            )}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 )}
 

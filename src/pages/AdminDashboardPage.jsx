@@ -517,19 +517,19 @@ export const AdminDashboardPage = () => {
         </section>
       </div>
 
-      {/* 5. Escrow Audit & Resolutions */}
+      {/* 5. Cooperative Welfare & Democratic Resolutions */}
       <section className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 shadow-2xs border border-surface-variant/40 flex flex-col gap-3">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-2 text-primary">
             <span className="material-symbols-outlined text-[20px]">account_balance</span>
-            <h3 className="font-bold text-base text-on-surface">Public Audit Ledger & Democratic Resolutions</h3>
+            <h3 className="font-bold text-base text-on-surface">Community Welfare & Democratic Resolutions</h3>
           </div>
           <button
             type="button"
             onClick={() => setAuditReportModalOpen(true)}
             className="text-xs font-bold text-primary hover:underline flex items-center gap-1 bg-primary/10 px-3 py-1.5 rounded-xl transition-colors"
           >
-            <span>Open Public Ledger</span>
+            <span>View Payout Audits</span>
             <span className="material-symbols-outlined text-[14px]">arrow_forward</span>
           </button>
         </div>
@@ -544,7 +544,7 @@ export const AdminDashboardPage = () => {
         {publishedAlert && (
           <div className="p-2.5 bg-secondary-container text-on-secondary-container rounded-xl text-xs font-bold flex items-center gap-2">
             <span className="material-symbols-outlined text-[16px]">check</span>
-            <span>Ballot published to Community ledger!</span>
+            <span>Ballot published to Community Hub!</span>
           </div>
         )}
 

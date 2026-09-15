@@ -469,7 +469,7 @@ export const ProfilePage = () => {
           </select>
         </div>
 
-        {/* Cooperative Audit & Open Source Transparency */}
+        {/* Cooperative Welfare & Direct Payout Transparency */}
         <button
           type="button"
           onClick={() => setAuditReportModalOpen(true)}
@@ -480,7 +480,7 @@ export const ProfilePage = () => {
               <span className="material-symbols-outlined text-[18px]">verified</span>
             </div>
             <div>
-              <span className="text-xs font-bold text-on-surface block">Cooperative Ledger Audit</span>
+              <span className="text-xs font-bold text-on-surface block">Cooperative Welfare & Direct Payouts Log</span>
               <span className="text-[11px] text-on-surface-variant">View ₹0 Commission & Escrow Audited Proof</span>
             </div>
           </div>
