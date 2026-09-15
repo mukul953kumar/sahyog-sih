@@ -980,6 +980,11 @@ export const AppProvider = ({ children }) => {
     timeSlot = 'Today, 4:00 PM – 5:00 PM',
     labourAmount = agreedLabourPrice,
     paymentMethod = 'UPI',
+    customerName = 'Priya Sharma',
+    customerPhone = '+91 98765 43210',
+    houseNo = 'Flat #402, 4th Floor, Shanti Enclave',
+    landmark = 'Near Shiv Mandir / Opp Bank ATM',
+    entryNotes = 'Press Bell #402, tell guard technician is from SAHYOG',
   }) => {
     const bookingId = `SHG-${Math.floor(1000 + Math.random() * 9000)}`;
     const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
@@ -1001,6 +1006,12 @@ export const AppProvider = ({ children }) => {
       workerAvatar: worker.detailAvatar || worker.avatar,
       serviceTitle,
       address,
+      houseNo,
+      landmark,
+      entryNotes,
+      customerName,
+      customerPhone,
+      customerInitials: customerName.split(' ').map(n => n[0]).join('').toUpperCase(),
       timeSlot,
       labourAmount,
       platformCommission: 0,

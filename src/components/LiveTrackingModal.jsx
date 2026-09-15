@@ -516,40 +516,7 @@ export const LiveTrackingModal = () => {
             </div>
           </div>
 
-          {/* 2. Vehicle & Verification Strip */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 text-xs">
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-variant/30 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-[18px]">electric_scooter</span>
-              <div className="min-w-0">
-                <span className="text-[10px] text-on-surface-variant block font-medium">Vehicle</span>
-                <span className="font-bold text-on-surface text-[11px] truncate block">{vehicle.model}</span>
-              </div>
-            </div>
 
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-variant/30 flex items-center gap-2">
-              <span className="material-symbols-outlined text-primary text-[18px]">pin</span>
-              <div className="min-w-0">
-                <span className="text-[10px] text-on-surface-variant block font-medium">Plate No.</span>
-                <span className="font-mono font-bold text-on-surface text-[11px] truncate block">{vehicle.regNumber}</span>
-              </div>
-            </div>
-
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-variant/30 flex items-center gap-2">
-              <span className="material-symbols-outlined text-emerald-600 text-[18px]">verified_user</span>
-              <div className="min-w-0">
-                <span className="text-[10px] text-on-surface-variant block font-medium">Safety Check</span>
-                <span className="font-bold text-emerald-800 text-[11px] block">ISI Helmet ✓</span>
-              </div>
-            </div>
-
-            <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-variant/30 flex items-center gap-2">
-              <span className="material-symbols-outlined text-amber-600 text-[18px]">battery_charging_full</span>
-              <div className="min-w-0">
-                <span className="text-[10px] text-on-surface-variant block font-medium">EV Battery</span>
-                <span className="font-bold text-on-surface text-[11px] block">{vehicle.batteryPercent}% Charged</span>
-              </div>
-            </div>
-          </div>
 
           {/* 3. Escrow Secret 4-Digit Release PIN Card */}
           <div className="bg-amber-50 border border-amber-200 rounded-2xl p-3 sm:p-3.5 flex items-center justify-between gap-3">

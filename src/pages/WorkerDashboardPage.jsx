@@ -273,8 +273,35 @@ export const WorkerDashboardPage = () => {
                   </div>
 
                   {job.status === 'accepted' ? (
-                    <div className="p-2.5 bg-secondary-container text-on-secondary-container rounded-xl font-bold text-xs text-center">
-                      Job Accepted! Heading over to customer site.
+                    <div className="flex flex-col gap-2 pt-2 border-t border-slate-200/60 text-xs">
+                      <div className="p-2.5 bg-emerald-50 rounded-xl border border-emerald-200 flex items-center justify-between">
+                        <div>
+                          <span className="font-bold text-emerald-950 block">{job.customerName || 'Priya Sharma'}</span>
+                          <span className="text-[11px] text-emerald-800 font-mono">{job.customerPhone || '+91 98765 43210'}</span>
+                        </div>
+                        <div className="flex items-center gap-1.5">
+                          <a
+                            href={`tel:${job.customerPhone || '9876543210'}`}
+                            className="px-2.5 py-1 bg-emerald-600 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-2xs"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">call</span>
+                            <span>{isHindi ? 'कॉल' : 'Call'}</span>
+                          </a>
+                          <a
+                            href={`https://wa.me/919876543210?text=Namaste%20Priya%20ji,%20I%20have%20reached%20your%20building.`}
+                            target="_blank"
+                            rel="noreferrer"
+                            className="px-2.5 py-1 bg-green-500 text-white rounded-lg font-bold text-[11px] flex items-center gap-1 shadow-2xs"
+                          >
+                            <span className="material-symbols-outlined text-[13px]">chat</span>
+                            <span>WhatsApp</span>
+                          </a>
+                        </div>
+                      </div>
+                      <div className="text-[11px] text-slate-600 bg-slate-50 p-2 rounded-xl border border-slate-200">
+                        <span className="font-bold text-slate-900 block">📍 Landmark & Door:</span>
+                        <span>Flat #402, 4th Floor • Near Shiv Mandir • Press Bell 402</span>
+                      </div>
                     </div>
                   ) : (
                     <div className="flex items-center gap-2 pt-1">

@@ -21,10 +21,16 @@ export const BookingCheckoutPage = () => {
   const [chatInput, setChatInput] = useState('');
   const [isChatOpen, setIsChatOpen] = useState(true);
   const [paymentMethod, setPaymentMethod] = useState('upi');
-  const [address, setAddress] = useState(
-    `${selectedLocality || 'Civil Lines, Golaghat'}, ${activeCityConfig?.name || 'Sultanpur'}`
-  );
+  
+  // Detailed Customer Address & Contact Info
+  const [customerName, setCustomerName] = useState('Priya Sharma');
+  const [customerPhone, setCustomerPhone] = useState('+91 98765 43210');
+  const [houseNo, setHouseNo] = useState('Flat #402, 4th Floor, Shanti Enclave');
+  const [landmark, setLandmark] = useState('Near Shiv Mandir / Opp Bank ATM');
+  const [entryNotes, setEntryNotes] = useState('Press Bell #402, tell security guard technician is from SAHYOG');
   const [timeSlot, setTimeSlot] = useState('Today, 4:00 PM – 5:00 PM');
+
+  const fullAddress = `${houseNo}, ${landmark}, ${selectedLocality || 'Civil Lines'}, ${activeCityConfig?.name || 'Sultanpur'}`;
 
   const chatEndRef = useRef(null);
 
@@ -59,7 +65,12 @@ export const BookingCheckoutPage = () => {
     createBooking({
       worker: currentWorker,
       serviceTitle: `${currentWorker.category === 'electrical' ? 'Electrical Switchboard & Wiring Repair' : `${currentWorker.name.split(' ')[0]}'s Service`}`,
-      address,
+      address: fullAddress,
+      houseNo,
+      landmark,
+      entryNotes,
+      customerName,
+      customerPhone,
       timeSlot,
       labourAmount: agreedLabourPrice,
       paymentMethod,
@@ -99,7 +110,7 @@ export const BookingCheckoutPage = () => {
         <div className="flex flex-col gap-1 text-xs text-on-surface-variant">
           <div className="flex items-center gap-1.5">
             <span className="material-symbols-outlined text-primary text-[16px] shrink-0">location_on</span>
-            <span className="truncate font-medium text-on-surface">{address}</span>
+            <span className="truncate font-medium text-on-surface">{fullAddress}</span>
           </div>
           <div className="flex items-center gap-1.5">
             <span className="material-symbols-outlined text-primary text-[16px] shrink-0">schedule</span>
@@ -241,39 +252,117 @@ export const BookingCheckoutPage = () => {
         )}
       </section>
 
-      {/* 3. Transparent Bill Breakdown */}
+      {/* 3. Customer Doorstep Address & Contact Verification */}
+      <section className="bg-surface-container-lowest rounded-2xl shadow-2xs border border-surface-variant/40 p-4 flex flex-col gap-3">
+        <div className="flex items-center justify-between pb-2 border-b border-surface-variant/30">
+          <div className="flex items-center gap-2 text-primary font-bold text-sm">
+            <span className="material-symbols-outlined text-[20px]">home_pin</span>
+            <span>{isHindi ? 'डोरस्टेप पता व संपर्क विवरण' : 'Doorstep Address & Contact Details'}</span>
+          </div>
+          <span className="text-[10px] font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded-md">
+            {isHindi ? 'सीधा तकनीशियन को जाएगा' : 'Sent Directly to Technician'}
+          </span>
+        </div>
+
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">
+              {isHindi ? 'ग्राहक का नाम' : 'Customer Name'}
+            </label>
+            <input
+              type="text"
+              value={customerName}
+              onChange={(e) => setCustomerName(e.target.value)}
+              className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-300 font-bold text-slate-900 focus:ring-2 focus:ring-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">
+              {isHindi ? 'मोबाइल नंबर (कॉल हेतु)' : 'Primary Contact (For Direct Calling)'}
+            </label>
+            <input
+              type="text"
+              value={customerPhone}
+              onChange={(e) => setCustomerPhone(e.target.value)}
+              className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-300 font-bold text-slate-900 focus:ring-2 focus:ring-primary focus:outline-none font-mono"
+            />
+          </div>
+
+          <div className="sm:col-span-2">
+            <label className="font-bold text-slate-700 block mb-1">
+              {isHindi ? 'मकान नं., फ्लोर व बिल्डिंग का नाम' : 'Flat / House No., Floor & Apartment / Building'}
+            </label>
+            <input
+              type="text"
+              value={houseNo}
+              onChange={(e) => setHouseNo(e.target.value)}
+              placeholder="e.g. Flat #402, 4th Floor, Shanti Enclave"
+              className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-300 font-medium text-slate-900 focus:ring-2 focus:ring-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">
+              {isHindi ? 'नजदीकी लैंडमार्क (पहचान चिन्ह)' : 'Prominent Nearby Landmark'}
+            </label>
+            <input
+              type="text"
+              value={landmark}
+              onChange={(e) => setLandmark(e.target.value)}
+              placeholder="e.g. Near Shiv Mandir / Opp Bank ATM"
+              className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-300 font-medium text-slate-900 focus:ring-2 focus:ring-primary focus:outline-none"
+            />
+          </div>
+
+          <div>
+            <label className="font-bold text-slate-700 block mb-1">
+              {isHindi ? 'गेट / डोरस्टेप निर्देश' : 'Gate Entry / Doorbell Notes'}
+            </label>
+            <input
+              type="text"
+              value={entryNotes}
+              onChange={(e) => setEntryNotes(e.target.value)}
+              placeholder="e.g. Press Bell #402, tell guard technician is from SAHYOG"
+              className="w-full h-9 px-3 rounded-xl bg-slate-50 border border-slate-300 font-medium text-slate-900 focus:ring-2 focus:ring-primary focus:outline-none"
+            />
+          </div>
+        </div>
+      </section>
+
+      {/* 4. Transparent Bill Breakdown */}
       <section className="bg-surface-container-lowest rounded-2xl shadow-2xs border border-surface-variant/40 p-4 flex flex-col gap-2 text-xs">
         <div className="flex items-center gap-1.5 text-on-surface font-bold text-sm mb-0.5">
           <span className="material-symbols-outlined text-primary text-[18px]">receipt_long</span>
-          <span>Transparent Bill</span>
+          <span>{isHindi ? 'पारदर्शी बिल' : 'Transparent Bill'}</span>
         </div>
 
         <div className="flex justify-between items-center py-0.5 text-on-surface">
-          <span>Agreed Labour (100% to Worker)</span>
+          <span>{isHindi ? 'सहमति पारिश्रमिक (100% कारीगर को)' : 'Agreed Labour (100% to Worker)'}</span>
           <span className="font-bold">₹{agreedLabourPrice}</span>
         </div>
 
         <div className="flex justify-between items-center py-0.5 text-secondary font-bold">
-          <span>Cooperative Commission Cut</span>
+          <span>{isHindi ? 'सहकारी कमीशन कटौती' : 'Cooperative Commission Cut'}</span>
           <span>₹0</span>
         </div>
 
         <div className="flex justify-between items-center py-0.5 text-on-surface-variant">
-          <span>Safety & Insurance Protection</span>
+          <span>{isHindi ? 'सुरक्षा व बीमा फंड' : 'Safety & Insurance Protection'}</span>
           <span>₹{insuranceFee}</span>
         </div>
 
         <div className="border-t border-surface-variant/40 my-1"></div>
 
         <div className="flex justify-between items-center text-sm font-bold text-on-surface">
-          <span>Total Escrow Amount</span>
+          <span>{isHindi ? 'कुल एस्क्रो राशि' : 'Total Escrow Amount'}</span>
           <span className="text-base font-black text-primary">₹{totalEscrowAmount}</span>
         </div>
       </section>
 
-      {/* 4. Payment Method Selection */}
+      {/* 5. Payment Method Selection */}
       <section className="bg-surface-container-lowest rounded-2xl shadow-2xs border border-surface-variant/40 p-4 flex flex-col gap-2">
-        <h3 className="font-bold text-xs text-on-surface">Payment Channel</h3>
+        <h3 className="font-bold text-xs text-on-surface">{isHindi ? 'भुगतान चैनल चुनें' : 'Payment Channel'}</h3>
         <div className="grid grid-cols-3 gap-2">
           {[
             { id: 'upi', label: 'UPI / GPay', icon: 'qr_code_2' },
@@ -297,7 +386,7 @@ export const BookingCheckoutPage = () => {
         </div>
       </section>
 
-      {/* 5. Checkout CTA Button */}
+      {/* 6. Checkout CTA Button */}
       <div className="pt-1">
         <button
           type="button"
@@ -305,10 +394,12 @@ export const BookingCheckoutPage = () => {
           className="w-full h-12 rounded-xl bg-primary hover:bg-primary-container text-white text-sm font-bold flex items-center justify-center gap-1.5 shadow-md active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined text-[18px]">lock</span>
-          <span>Deposit in Safe Escrow (₹{totalEscrowAmount})</span>
+          <span>{isHindi ? `एस्क्रो तिजोरी में सुरक्षित जमा करें (₹${totalEscrowAmount})` : `Deposit in Safe Escrow (₹${totalEscrowAmount})`}</span>
         </button>
         <p className="text-center text-[11px] text-on-surface-variant mt-2 font-medium">
-          Protected by RBI Escrow. Funds are released only after you share the 4-digit PIN.
+          {isHindi
+            ? 'आरबीआई एस्क्रो द्वारा सुरक्षित। काम पूरा होने व संतुष्ट होने के बाद पिन देने पर ही भुगतान रिलीज होगा।'
+            : 'Protected by RBI Escrow. Funds are released only after you inspect and share the 4-digit PIN.'}
         </p>
       </div>
     </div>

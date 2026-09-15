@@ -674,21 +674,92 @@ export const BookingsPage = () => {
                           </button>
                         </div>
 
-                        {/* Secondary Customer Action: Cancel & 100% Escrow Refund */}
-                        <div className="pt-1 border-t border-amber-500/20 text-xs">
+                        {/* Customer Fallback Actions: Reassign Standby Worker or Instant Refund */}
+                        <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 border-t border-amber-500/20 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              setReassignModalBooking(b);
+                              soundEffects.playRadarBlip();
+                            }}
+                            className="py-2 px-2.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 border border-indigo-200 font-bold text-indigo-900 flex items-center justify-center gap-1 text-[11px] transition-colors active:scale-95 shadow-2xs"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-indigo-700">swap_horiz</span>
+                            <span>{isHindi ? 'कारीगर नहीं आया? दूसरा भेजें' : 'Worker Delayed? Reassign Peer'}</span>
+                          </button>
                           <button
                             type="button"
                             onClick={() => setCancelModalBooking(b)}
-                            className="w-full py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 font-bold text-red-700 flex items-center justify-center gap-1.5 text-xs transition-colors active:scale-95 shadow-2xs"
+                            className="py-2 px-2.5 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 font-bold text-red-700 flex items-center justify-center gap-1 text-[11px] transition-colors active:scale-95 shadow-2xs"
                           >
-                            <span className="material-symbols-outlined text-[16px]">cancel</span>
-                            <span>{isHindi ? 'बुकिंग रद्द करें व 100% तुरंत रिफंड' : 'Cancel Booking & Instant 100% Refund'}</span>
+                            <span className="material-symbols-outlined text-[15px]">cancel</span>
+                            <span>{isHindi ? 'रद्द करें व 100% रिफंड' : 'Cancel & 100% Refund'}</span>
                           </button>
                         </div>
                       </>
                     ) : (
-                      // Worker Active Job View (Direct PIN Verification Input & Audio Feedback!)
+                      // Worker Active Job View (Direct Contact, Landmark & PIN Claim)
                       <div className="flex flex-col gap-3">
+                        {/* Customer Doorstep Address & Calling Card */}
+                        <div className="p-3 bg-white rounded-2xl border border-amber-300 shadow-2xs flex flex-col gap-2 text-xs">
+                          <div className="flex items-center justify-between pb-1.5 border-b border-slate-100">
+                            <div className="flex items-center gap-2">
+                              <span className="w-7 h-7 rounded-full bg-primary/10 text-primary font-bold text-xs flex items-center justify-center">
+                                {b.customerInitials || 'PS'}
+                              </span>
+                              <div>
+                                <span className="font-extrabold text-slate-900 block leading-tight">
+                                  {b.customerName || 'Priya Sharma'}
+                                </span>
+                                <span className="text-[10px] text-slate-500 font-mono">
+                                  {b.customerPhone || '+91 98765 43210'}
+                                </span>
+                              </div>
+                            </div>
+
+                            {/* Direct Communication Buttons */}
+                            <div className="flex items-center gap-1.5">
+                              <a
+                                href={`tel:${b.customerPhone || '9876543210'}`}
+                                onClick={(e) => {
+                                  soundEffects.playSuccessChime();
+                                }}
+                                className="px-2.5 py-1 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-[11px] flex items-center gap-1 shadow-2xs active:scale-95 transition-all"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">call</span>
+                                <span>{isHindi ? 'कॉल करें' : 'Call'}</span>
+                              </a>
+                              <a
+                                href={`https://wa.me/${(b.customerPhone || '919876543210').replace(/\D/g, '')}?text=Namaste%20${encodeURIComponent(b.customerName || 'Customer')}%20ji,%20I%20am%20${encodeURIComponent(b.workerName || 'technician')}%20from%20SAHYOG.%20I%20have%20reached%20your%20building.`}
+                                target="_blank"
+                                rel="noreferrer"
+                                className="px-2.5 py-1 rounded-xl bg-green-500 hover:bg-green-600 text-white font-bold text-[11px] flex items-center gap-1 shadow-2xs active:scale-95 transition-all"
+                              >
+                                <span className="material-symbols-outlined text-[14px]">chat</span>
+                                <span>WhatsApp</span>
+                              </a>
+                            </div>
+                          </div>
+
+                          {/* House No, Landmark & Entry Notes */}
+                          <div className="space-y-1 text-[11px] text-slate-700 bg-slate-50 p-2 rounded-xl border border-slate-200/80">
+                            <div className="flex items-start gap-1">
+                              <span className="material-symbols-outlined text-[15px] text-primary shrink-0 mt-0.5">home_pin</span>
+                              <span className="font-bold text-slate-900">
+                                {b.houseNo || 'Flat #402, 4th Floor, Shanti Enclave'}, {b.address}
+                              </span>
+                            </div>
+                            <div className="flex items-center gap-1 text-slate-600 pl-4">
+                              <span className="font-bold text-amber-900">{isHindi ? 'लैंडमार्क:' : 'Landmark:'}</span>
+                              <span>{b.landmark || 'Near Shiv Mandir / Opp Bank ATM'}</span>
+                            </div>
+                            <div className="flex items-center gap-1 text-slate-600 pl-4">
+                              <span className="font-bold text-indigo-900">{isHindi ? 'गेट निर्देश:' : 'Gate Notes:'}</span>
+                              <span className="italic">"{b.entryNotes || 'Press Bell #402, tell guard technician is from SAHYOG'}"</span>
+                            </div>
+                          </div>
+                        </div>
+
                         <div className="flex items-center justify-between text-xs text-amber-950 font-bold">
                           <span className="flex items-center gap-1.5">
                             <span className="material-symbols-outlined text-[18px] text-amber-700 shrink-0">
