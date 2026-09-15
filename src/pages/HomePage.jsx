@@ -1,5 +1,6 @@
 import React from 'react';
 import { useApp } from '../context/AppContext';
+import { LiveTripBanner } from '../components/LiveTripBanner';
 
 export const HomePage = () => {
   const {
@@ -110,6 +111,9 @@ export const HomePage = () => {
           <span className="material-symbols-outlined text-[14px] text-outline ml-1">expand_more</span>
         </button>
       </div>
+
+      {/* Live Active Trip Tracker Banner (Uber Style) */}
+      <LiveTripBanner />
 
       {/* 2. Sleek Hero Banner (Spacious Grid on Desktop) */}
       <div className="bg-gradient-to-br from-primary/10 via-surface-container-lowest to-secondary/10 rounded-3xl p-5 sm:p-7 border border-primary/20 shadow-xs grid grid-cols-1 lg:grid-cols-12 gap-6 items-center">

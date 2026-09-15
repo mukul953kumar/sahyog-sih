@@ -1,251 +1,829 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import { useApp } from '../context/AppContext';
+import { LiveTripBanner } from '../components/LiveTripBanner';
+import { soundEffects } from '../utils/soundEffects';
 
 export const BookingsPage = () => {
-  const { bookings, releaseEscrow, navigateTo, setDisputeModalBooking, t, userRole, currentWorker } = useApp();
-  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'locked' | 'disputed' | 'completed'
+  const {
+    bookings,
+    resetBookingsToSample,
+    releaseEscrow,
+    claimEscrowWithPin,
+    navigateTo,
+    setDisputeModalBooking,
+    openLiveTracking,
+    setInvoiceModalBooking,
+    setCancelModalBooking,
+    setReassignModalBooking,
+    t,
+    userRole,
+    currentWorker,
+    language,
+  } = useApp();
 
+  const isHindi = language === 'hi';
   const isWorker = userRole === 'worker';
 
-  // Filter bookings for the active user role
-  const roleBookings = isWorker
-    ? (bookings || []).filter((b) => b.workerId === currentWorker?.id || b.workerName === currentWorker?.name)
-    : (bookings || []);
+  const [activeTab, setActiveTab] = useState('all'); // 'all' | 'locked' | 'completed' | 'refunded' | 'disputed'
+  const [selectedCategory, setSelectedCategory] = useState('all');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [pinInputs, setPinInputs] = useState({});
+  const [pinFeedback, setPinFeedback] = useState({});
 
-  const filteredBookings = roleBookings.filter((b) => {
-    if (activeTab === 'locked') return b.status === 'escrow_locked';
-    if (activeTab === 'disputed') return b.status === 'disputed';
-    if (activeTab === 'completed') return b.status === 'released' || b.status === 'refunded';
-    return true;
-  });
+  // Filter bookings for active role
+  const roleBookings = useMemo(() => {
+    return isWorker
+      ? (bookings || []).filter(
+          (b) =>
+            b.workerId === currentWorker?.id ||
+            b.workerName === currentWorker?.name ||
+            !b.workerId
+        )
+      : bookings || [];
+  }, [bookings, isWorker, currentWorker]);
+
+  // Tab and search filter
+  const filteredBookings = useMemo(() => {
+    return roleBookings.filter((b) => {
+      // Tab filter
+      if (activeTab === 'locked' && b.status !== 'escrow_locked') return false;
+      if (activeTab === 'completed' && b.status !== 'released') return false;
+      if (activeTab === 'refunded' && b.status !== 'refunded') return false;
+      if (activeTab === 'disputed' && b.status !== 'disputed') return false;
+
+      // Category filter
+      if (selectedCategory !== 'all' && b.category !== selectedCategory) return false;
+
+      // Search filter
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        const matchId = b.id?.toLowerCase().includes(q);
+        const matchTitle = b.serviceTitle?.toLowerCase().includes(q);
+        const matchCustomer = b.customerName?.toLowerCase().includes(q);
+        const matchWorker = b.workerName?.toLowerCase().includes(q);
+        const matchAddress = b.address?.toLowerCase().includes(q);
+        if (!matchId && !matchTitle && !matchCustomer && !matchWorker && !matchAddress) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }, [roleBookings, activeTab, selectedCategory, searchQuery]);
+
+  // Financial Metrics Calculation
+  const totalEarned = useMemo(() => {
+    return roleBookings
+      .filter((b) => b.status === 'released')
+      .reduce((sum, b) => sum + (b.labourAmount || 0), 0);
+  }, [roleBookings]);
+
+  const totalEscrowLocked = useMemo(() => {
+    return roleBookings
+      .filter((b) => b.status === 'escrow_locked')
+      .reduce((sum, b) => sum + (b.labourAmount || b.totalEscrow || 0), 0);
+  }, [roleBookings]);
+
+  const commercialCutSaved = useMemo(() => {
+    // 20% typical cut in commercial apps like UC
+    return Math.round(totalEarned * 0.2);
+  }, [totalEarned]);
+
+  const handleWorkerPinClaim = (bookingId, actualPin) => {
+    const entered = pinInputs[bookingId] || '';
+    if (!entered || entered.length !== 4) {
+      setPinFeedback((prev) => ({
+        ...prev,
+        [bookingId]: { type: 'error', text: 'Please enter a valid 4-digit PIN' },
+      }));
+      return;
+    }
+
+    const res = claimEscrowWithPin(entered);
+    if (res.success) {
+      soundEffects.playCashPayoutChime();
+      setPinFeedback((prev) => ({
+        ...prev,
+        [bookingId]: { type: 'success', text: res.message },
+      }));
+    } else {
+      setPinFeedback((prev) => ({
+        ...prev,
+        [bookingId]: { type: 'error', text: res.message },
+      }));
+    }
+  };
+
+  const getInitials = (name) => {
+    if (!name) return 'CU';
+    return name
+      .split(' ')
+      .map((n) => n[0])
+      .join('')
+      .substring(0, 2)
+      .toUpperCase();
+  };
 
   return (
-    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-4 flex flex-col gap-4 pb-28 md:pb-16 animate-fade-in">
-      {/* Header with Role Separation */}
-      <div className="flex items-center justify-between">
+    <div className="w-full max-w-6xl mx-auto px-4 sm:px-6 py-6 flex flex-col gap-6 pb-28 md:pb-16 animate-fade-in">
+      {/* 1. Header Command Bar with Cooperative Badges */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 bg-white p-5 sm:p-6 rounded-3xl border border-slate-200/90 shadow-sm">
         <div>
-          <h1 className="font-black text-xl sm:text-2xl text-on-surface">
-            {isWorker ? 'Job Orders & Escrow Payouts' : (t('navBookings') || 'My Bookings & Escrow Vault')}
-          </h1>
-          <p className="text-xs sm:text-sm text-on-surface-variant font-medium">
+          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-emerald-50 text-emerald-800 border border-emerald-200 text-xs font-bold mb-2">
+            <span className="material-symbols-outlined text-[15px] text-emerald-600">verified_user</span>
+            <span>
+              {isWorker
+                ? isHindi
+                  ? '100% सीधा मेहनताना • 0% कमीशन कटौती'
+                  : '100% Direct Remuneration • Zero Fee Cut'
+                : isHindi
+                ? 'आरबीआई एस्क्रो सुरक्षा • 100% रिफंडेबल'
+                : 'RBI Escrow Protected Vault • 100% Refundable'}
+            </span>
+          </div>
+          <h1 className="font-black text-2xl sm:text-3xl text-on-surface tracking-tight">
             {isWorker
-              ? '100% of agreed labour is credited directly to your bank account upon customer PIN verification.'
-              : 'Payments remain 100% safe in RBI-compliant escrow until you authorize with your 4-digit PIN.'}
+              ? isHindi
+                ? 'कार्य ऑर्डर व एस्क्रो सेटलमेंट'
+                : 'Job Orders & Escrow Settlements'
+              : isHindi
+              ? 'मेरी बुकिंग व एस्क्रो तिजोरी'
+              : 'My Bookings & Escrow Vault'}
+          </h1>
+          <p className="text-xs sm:text-sm text-on-surface-variant font-medium mt-1 max-w-2xl">
+            {isWorker
+              ? isHindi
+                ? 'ग्राहक द्वारा 4-अंकीय पिन सत्यापित होते ही तय पारिश्रमिक तुरंत आपके बैंक खाते में क्रेडिट हो जाता है।'
+                : 'Every rupee of agreed labour is credited directly to your registered bank account with instant UTR proof upon customer 4-digit PIN verification.'
+              : isHindi
+                ? 'आपकी बुकिंग राशि सहकारी एस्क्रो में सुरक्षित रहती है और कार्य निरीक्षण के बाद पिन साझा करने पर ही रिलीज होती है।'
+                : 'Your booking amount stays securely vaulted in cooperative escrow and is only released after you inspect and share your completion PIN.'}
           </p>
         </div>
-        {!isWorker && (
+
+        <div className="flex items-center gap-2.5 self-start md:self-center shrink-0">
           <button
             type="button"
-            onClick={() => navigateTo('workers')}
-            className="px-4 py-2 rounded-xl bg-primary text-white font-bold text-xs shrink-0 active:scale-95 transition-all shadow-xs"
+            onClick={() => {
+              resetBookingsToSample();
+              soundEffects.playSuccessChime();
+            }}
+            title={isHindi ? "सैंपल डेटा रीसेट करें" : "Reset to clean sample orders"}
+            className="px-3.5 py-2.5 rounded-2xl bg-slate-100/80 hover:bg-slate-200/80 border border-slate-200 text-slate-800 text-xs font-bold transition-all active:scale-95 flex items-center gap-1.5 shadow-2xs"
           >
-            + Book Service
+            <span className="material-symbols-outlined text-[16px] text-primary">sync</span>
+            <span>{isHindi ? 'डेमो डेटा रीसेट' : 'Reset Demo Data'}</span>
           </button>
-        )}
-      </div>
 
-      {/* Filter Tabs */}
-      <div className="flex gap-2 overflow-x-auto no-scrollbar pb-1 text-xs">
-        {[
-          { id: 'all', label: `All (${roleBookings.length})` },
-          {
-            id: 'locked',
-            label: isWorker
-              ? `Escrow Locked (${roleBookings.filter((b) => b.status === 'escrow_locked').length})`
-              : `Held in Escrow (${roleBookings.filter((b) => b.status === 'escrow_locked').length})`,
-          },
-          {
-            id: 'disputed',
-            label: `Disputed (${roleBookings.filter((b) => b.status === 'disputed').length})`,
-          },
-          {
-            id: 'completed',
-            label: `Completed (${roleBookings.filter((b) => b.status === 'released' || b.status === 'refunded').length})`,
-          },
-        ].map((tab) => (
-          <button
-            key={tab.id}
-            type="button"
-            onClick={() => setActiveTab(tab.id)}
-            className={`px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 active:scale-95 ${
-              activeTab === tab.id
-                ? 'bg-primary text-white shadow-xs'
-                : 'bg-surface-container-low text-on-surface-variant hover:bg-surface-container hover:text-on-surface border border-surface-variant/30'
-            }`}
-          >
-            {tab.label}
-          </button>
-        ))}
-      </div>
-
-      {/* Bookings List (2-column responsive grid on desktop) */}
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-        {filteredBookings.length === 0 ? (
-          <div className="col-span-full text-center py-12 bg-surface-container-low rounded-2xl p-6 border border-surface-variant/30">
-            <span className="material-symbols-outlined text-4xl text-outline mb-2">
-              receipt_long
-            </span>
-            <p className="font-bold text-on-surface text-base">
-              {isWorker ? 'No job orders found in this category.' : 'No bookings in this category.'}
-            </p>
-            <p className="text-xs text-on-surface-variant mt-1">
-              {isWorker ? 'Turn on duty on your dashboard to receive customer dispatches.' : 'Hire a verified cooperative technician to get started.'}
-            </p>
+          {!isWorker && (
             <button
               type="button"
-              onClick={() => navigateTo(isWorker ? 'worker-dashboard' : 'workers')}
-              className="mt-3 px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
+              onClick={() => navigateTo('workers')}
+              className="px-4 py-2.5 rounded-2xl bg-primary text-white font-bold text-xs shrink-0 active:scale-95 transition-all shadow-sm flex items-center gap-1.5 hover:bg-primary-container"
             >
-              {isWorker ? 'Go to Worker Hub' : 'Explore Technicians'}
+              <span className="material-symbols-outlined text-[16px]">add</span>
+              <span>{isHindi ? 'नई सेवा बुक करें' : 'Book New Service'}</span>
             </button>
+          )}
+        </div>
+      </div>
+
+      {/* 2. Executive Financial KPI Summary Cards (Worker/Customer perspective) */}
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
+        {/* Metric 1 */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm hover:border-emerald-300 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between text-on-surface-variant">
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {isWorker
+                ? isHindi ? 'कुल सीधी कमाई' : 'Total Direct Earnings'
+                : isHindi ? 'कुल खर्च (0% मार्कअप)' : 'Total Spent (0% Markup)'}
+            </span>
+            <span className="w-8 h-8 rounded-xl bg-emerald-50 text-emerald-700 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[18px]">payments</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-black text-on-surface tracking-tight">
+              ₹{totalEarned.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-emerald-700 font-bold block mt-0.5">
+              {isHindi ? '✓ 100% बैंक में क्रेडिट' : '✓ 100% credited to bank'}
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 2 */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm hover:border-primary/40 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between text-on-surface-variant">
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {isWorker
+                ? isHindi ? '20% बिचौलिया कटौती बचत' : 'Saved vs 20% UC Cut'
+                : isHindi ? 'बचाया गया बिचौलिया शुल्क' : 'Middleman Fee Saved'}
+            </span>
+            <span className="w-8 h-8 rounded-xl bg-primary/10 text-primary flex items-center justify-center">
+              <span className="material-symbols-outlined text-[18px]">savings</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-black text-primary tracking-tight">
+              +₹{commercialCutSaved.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-primary font-bold block mt-0.5">
+              {isHindi ? '0% प्लेटफॉर्म कमीशन' : '0% Platform Commission'}
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 3 */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm hover:border-amber-300 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between text-on-surface-variant">
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {isHindi ? 'सक्रिय एस्क्रो तिजोरी' : 'Active Escrow Pool'}
+            </span>
+            <span className="w-8 h-8 rounded-xl bg-amber-50 text-amber-700 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[18px]">lock_clock</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-black text-amber-900 tracking-tight">
+              ₹{totalEscrowLocked.toLocaleString('en-IN')}
+            </span>
+            <span className="text-[11px] text-amber-800 font-bold block mt-0.5">
+              {isHindi ? 'आरबीआई एस्क्रो में सुरक्षित' : 'Vaulted in RBI Escrow'}
+            </span>
+          </div>
+        </div>
+
+        {/* Metric 4 */}
+        <div className="bg-white p-4 sm:p-5 rounded-2xl border border-slate-200/90 shadow-sm hover:border-blue-300 hover:shadow-md transition-all flex flex-col justify-between">
+          <div className="flex items-center justify-between text-on-surface-variant">
+            <span className="text-xs font-bold uppercase tracking-wider">
+              {isHindi ? 'भुगतान गति' : 'Settlement Speed'}
+            </span>
+            <span className="w-8 h-8 rounded-xl bg-blue-50 text-blue-700 flex items-center justify-center">
+              <span className="material-symbols-outlined text-[18px]">bolt</span>
+            </span>
+          </div>
+          <div className="mt-2">
+            <span className="text-2xl sm:text-3xl font-black text-blue-950 tracking-tight">
+              &lt; 5 {isHindi ? 'सेकंड' : 'Secs'}
+            </span>
+            <span className="text-[11px] text-blue-700 font-bold block mt-0.5">
+              {isHindi ? 'तुरंत बैंक IMPS / UPI' : 'Instant Bank IMPS / UPI'}
+            </span>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Trip Active Banner (if customer has en-route booking) */}
+      {!isWorker && <LiveTripBanner />}
+
+      {/* 3. Search & Category / Status Filters Bar */}
+      <div className="flex flex-col gap-3 bg-white p-4 rounded-2xl border border-slate-200/90 shadow-sm">
+        {/* Search Bar + Category Pills */}
+        <div className="flex flex-col sm:flex-row items-stretch sm:items-center justify-between gap-3">
+          {/* Search Input */}
+          <div className="relative flex-1">
+            <span className="material-symbols-outlined absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-[18px]">
+              search
+            </span>
+            <input
+              type="text"
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              placeholder={
+                isWorker
+                  ? isHindi
+                    ? "ऑर्डर आईडी, ग्राहक नाम, पता या सेवा खोजें..."
+                    : "Search by Order ID, customer name, locality, or service..."
+                  : isHindi
+                  ? "ऑर्डर आईडी, तकनीशियन या सेवा द्वारा खोजें..."
+                  : "Search your bookings by order ID, technician, or service..."
+              }
+              className="w-full h-10 pl-10 pr-9 rounded-xl bg-slate-50 hover:bg-slate-100/50 focus:bg-white border border-slate-200 text-xs font-medium text-slate-900 placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/20 focus:border-primary transition-all"
+            />
+            {searchQuery && (
+              <button
+                type="button"
+                onClick={() => setSearchQuery('')}
+                className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-700"
+              >
+                <span className="material-symbols-outlined text-[16px]">close</span>
+              </button>
+            )}
+          </div>
+
+          {/* Category Filter */}
+          <div className="flex items-center gap-1.5 overflow-x-auto no-scrollbar pb-0.5">
+            {[
+              { id: 'all', label: isHindi ? 'सभी व्यवसाय' : 'All Trades', icon: 'apps' },
+              { id: 'electrical', label: isHindi ? 'इलेक्ट्रिकल' : 'Electrical', icon: 'electric_bolt' },
+              { id: 'plumbing', label: isHindi ? 'प्लंबिंग' : 'Plumbing', icon: 'plumbing' },
+              { id: 'appliance', label: isHindi ? 'उपकरण' : 'Appliances', icon: 'mode_fan' },
+              { id: 'cleaning', label: isHindi ? 'सफाई' : 'Cleaning', icon: 'cleaning_services' },
+            ].map((cat) => (
+              <button
+                key={cat.id}
+                type="button"
+                onClick={() => setSelectedCategory(cat.id)}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 active:scale-95 flex items-center gap-1 ${
+                  selectedCategory === cat.id
+                    ? 'bg-secondary-container text-on-secondary-container font-black shadow-2xs'
+                    : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200/80 border border-slate-200'
+                }`}
+              >
+                <span className="material-symbols-outlined text-[14px]">{cat.icon}</span>
+                <span>{cat.label}</span>
+              </button>
+            ))}
+          </div>
+        </div>
+
+        {/* Status Filter Tabs */}
+        <div className="flex items-center gap-2 overflow-x-auto no-scrollbar pt-2 border-t border-slate-100 text-xs">
+          {[
+            { id: 'all', label: isHindi ? 'सभी ऑर्डर' : 'All Orders', count: roleBookings.length, icon: 'receipt_long' },
+            {
+              id: 'locked',
+              label: isWorker
+                ? isHindi ? 'सक्रिय / एस्क्रो में' : 'Active / Escrow Held'
+                : isHindi ? 'एस्क्रो में सुरक्षित' : 'Held in Escrow',
+              count: roleBookings.filter((b) => b.status === 'escrow_locked').length,
+              icon: 'lock_clock',
+            },
+            {
+              id: 'completed',
+              label: isHindi ? 'बैंक में 100% भुगतान' : '100% Paid to Bank',
+              count: roleBookings.filter((b) => b.status === 'released').length,
+              icon: 'verified',
+            },
+            {
+              id: 'refunded',
+              label: isHindi ? '100% धनवापसी' : '100% Refunded',
+              count: roleBookings.filter((b) => b.status === 'refunded').length,
+              icon: 'currency_exchange',
+            },
+            {
+              id: 'disputed',
+              label: isHindi ? 'मध्यस्थता में' : 'In Mediation',
+              count: roleBookings.filter((b) => b.status === 'disputed').length,
+              icon: 'gavel',
+            },
+          ].map((tab) => (
+            <button
+              key={tab.id}
+              type="button"
+              onClick={() => setActiveTab(tab.id)}
+              className={`px-3.5 py-2 rounded-xl font-bold transition-all shrink-0 active:scale-95 flex items-center gap-2 ${
+                activeTab === tab.id
+                  ? 'bg-primary text-white shadow-xs'
+                  : 'bg-slate-100/80 text-slate-700 hover:bg-slate-200/80 hover:text-slate-900 border border-slate-200'
+              }`}
+            >
+              <span className="material-symbols-outlined text-[15px]">{tab.icon}</span>
+              <span>{tab.label}</span>
+              <span
+                className={`text-[10px] font-mono font-black px-1.5 py-0.2 rounded-full ${
+                  activeTab === tab.id ? 'bg-white text-primary' : 'bg-slate-200 text-slate-800'
+                }`}
+              >
+                {tab.count}
+              </span>
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* 4. Modern Responsive Order Cards Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        {filteredBookings.length === 0 ? (
+          <div className="col-span-full text-center py-14 bg-white rounded-3xl p-8 border border-slate-200/90 shadow-sm flex flex-col items-center">
+            <div className="w-16 h-16 rounded-3xl bg-slate-100 flex items-center justify-center text-slate-400 mb-3">
+              <span className="material-symbols-outlined text-3xl">receipt_long</span>
+            </div>
+            <h3 className="font-bold text-slate-900 text-lg">
+              {isHindi ? 'आपके फिल्टर से कोई ऑर्डर मेल नहीं खाया' : 'No job orders match your filter'}
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-500 max-w-md mt-1">
+              {searchQuery
+                ? isHindi
+                  ? `"${searchQuery}" से मेल खाता कोई ऑर्डर नहीं मिला।`
+                  : `No orders matching "${searchQuery}". Try clearing your search term or tab filters.`
+                : isWorker
+                ? isHindi
+                  ? 'नए कार्य प्राप्त करने के लिए वर्कर हब में ऑन-ड्यूटी टॉगल ऑन रखें।'
+                  : 'Keep your On-Duty toggle active in Worker Hub to receive instant localized job dispatches.'
+                : isHindi
+                  ? 'सत्यापित सहकारी तकनीशियन 100% एस्क्रो सुरक्षा और 0% कमीशन पर बुक करें।'
+                  : 'Book a certified cooperative technician with 100% escrow protection and 0% platform surcharge.'}
+            </p>
+            <div className="flex items-center gap-2 mt-4">
+              {searchQuery && (
+                <button
+                  type="button"
+                  onClick={() => {
+                    setSearchQuery('');
+                    setActiveTab('all');
+                    setSelectedCategory('all');
+                  }}
+                  className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-800 rounded-xl text-xs font-bold transition-all border border-slate-200"
+                >
+                  {isHindi ? 'फ़िल्टर हटाएं' : 'Clear Filters'}
+                </button>
+              )}
+              <button
+                type="button"
+                onClick={() => resetBookingsToSample()}
+                className="px-4 py-2 bg-primary text-white rounded-xl text-xs font-bold shadow-xs active:scale-95 transition-all"
+              >
+                {isHindi ? 'सैंपल ऑर्डर लोड करें' : 'Load Sample Orders'}
+              </button>
+            </div>
           </div>
         ) : (
           filteredBookings.map((b) => {
             const isLocked = b.status === 'escrow_locked';
             const isDisputed = b.status === 'disputed';
             const isRefunded = b.status === 'refunded';
+            const isReleased = b.status === 'released';
+
+            const categoryIcon =
+              b.category === 'plumbing'
+                ? 'plumbing'
+                : b.category === 'appliance'
+                ? 'mode_fan'
+                : b.category === 'cleaning'
+                ? 'cleaning_services'
+                : 'electric_bolt';
 
             return (
               <article
                 key={b.id}
-                className="bg-surface-container-lowest rounded-2xl p-4 sm:p-5 shadow-2xs border border-surface-variant/40 flex flex-col justify-between gap-3.5"
+                className="bg-white rounded-3xl p-5 sm:p-6 shadow-sm border border-slate-200/90 flex flex-col justify-between gap-4 hover:border-primary/40 hover:shadow-md transition-all duration-200"
               >
-                <div className="flex flex-col gap-3">
-                  {/* Status Bar */}
-                  <div className="flex items-center justify-between flex-wrap gap-2">
-                    <span className="text-xs font-mono text-on-surface-variant font-bold">
-                      Order #{b.id} • {b.bookingDate}
+                {/* Header Row: Category Badge + Order Number + Status Pill */}
+                <div className="flex items-center justify-between gap-2 flex-wrap">
+                  <div className="flex items-center gap-2.5">
+                    <span className="w-9 h-9 rounded-2xl bg-primary/10 text-primary flex items-center justify-center shrink-0">
+                      <span className="material-symbols-outlined text-[20px]">{categoryIcon}</span>
                     </span>
-                    <span
-                      className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black ${
-                        isDisputed
-                          ? 'bg-error-container text-on-error-container'
-                          : isRefunded
-                          ? 'bg-blue-100 text-blue-800'
-                          : isLocked
-                          ? 'bg-secondary-container text-on-secondary-container'
-                          : 'bg-surface-container text-primary'
-                      }`}
-                    >
-                      <span className="material-symbols-outlined text-[15px]">
-                        {isDisputed ? 'gavel' : isRefunded ? 'currency_exchange' : isLocked ? 'lock' : 'check_circle'}
+                    <div>
+                      <div className="flex items-center gap-2">
+                        <span className="font-mono text-xs font-black text-on-surface">
+                          {isHindi ? `ऑर्डर #${b.id}` : `Order #${b.id}`}
+                        </span>
+                        <span className="text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-md bg-surface-container text-on-surface-variant">
+                          {b.category || (isHindi ? 'सेवा' : 'Service')}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-on-surface-variant block mt-0.5">
+                        {b.bookingDate} • {b.timeSlot}
                       </span>
-                      {isDisputed
-                        ? 'In Mediation'
+                    </div>
+                  </div>
+
+                  {/* Clean Status Pill */}
+                  <span
+                    className={`inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-black ${
+                      isDisputed
+                        ? 'bg-rose-100 text-rose-900 border border-rose-200'
                         : isRefunded
-                        ? '100% Refunded'
+                        ? 'bg-blue-100 text-blue-900 border border-blue-200'
                         : isLocked
-                        ? 'Held in Escrow'
-                        : 'Payout Released'}
+                        ? 'bg-amber-100 text-amber-950 border border-amber-300 animate-pulse'
+                        : 'bg-emerald-100 text-emerald-950 border border-emerald-300'
+                    }`}
+                  >
+                    <span className="material-symbols-outlined text-[15px]">
+                      {isDisputed
+                        ? 'gavel'
+                        : isRefunded
+                        ? 'currency_exchange'
+                        : isLocked
+                        ? 'lock_clock'
+                        : 'task_alt'}
                     </span>
-                  </div>
+                    <span>
+                      {isDisputed
+                        ? (isHindi ? 'मध्यस्थता में' : 'In Mediation')
+                        : isRefunded
+                        ? (isHindi ? '100% धनवापसी' : '100% Refunded')
+                        : isLocked
+                        ? (isHindi ? 'एस्क्रो में सुरक्षित' : 'Escrow Held')
+                        : (isHindi ? 'बैंक में 100% भुगतान' : '100% Paid to Bank')}
+                    </span>
+                  </span>
+                </div>
 
-                  {/* Worker & Service Overview */}
-                  <div className="flex items-center gap-3 p-3 bg-surface-container-low rounded-xl border border-surface-variant/20">
-                    <img
-                      alt={b.workerName}
-                      src={b.workerAvatar}
-                      className="w-12 h-12 rounded-xl object-cover border border-surface-variant/40 shrink-0"
-                    />
-                    <div className="flex-1 min-w-0">
-                      <h3 className="font-bold text-sm sm:text-base text-on-surface truncate">
+                {/* Service Title, Counterparty Profile & Price */}
+                <div className="flex flex-col gap-2.5 pt-1">
+                  <div className="flex items-start justify-between gap-3">
+                    <div className="flex-1">
+                      <h2 className="font-extrabold text-base text-on-surface leading-snug">
                         {b.serviceTitle}
-                      </h3>
-                      <p className="text-xs text-on-surface-variant font-medium">
-                        {isWorker ? `Customer: Priya Sharma` : b.workerName} • <strong className="text-on-surface">{b.timeSlot}</strong>
-                      </p>
+                      </h2>
+
+                      {/* Counterparty Identity Block */}
+                      <div className="flex items-center gap-2 mt-2">
+                        {isWorker ? (
+                          // Customer representation for worker view
+                          <div className="flex items-center gap-2">
+                            <span className="w-7 h-7 rounded-full bg-surface-container-high text-primary font-black text-[11px] flex items-center justify-center shrink-0 border border-surface-variant/40">
+                              {b.customerInitials || getInitials(b.customerName)}
+                            </span>
+                            <div className="text-xs">
+                              <span className="font-bold text-on-surface block">
+                                {b.customerName || 'Priya Sharma'}
+                              </span>
+                              {b.customerPhone && (
+                                <span className="text-[10px] text-on-surface-variant font-mono">
+                                  {b.customerPhone}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ) : (
+                          // Technician representation for customer view
+                          <div className="flex items-center gap-2">
+                            <img
+                              src={b.workerAvatar || 'https://images.unsplash.com/photo-1506794778202-cad84cf45f1d?w=400&auto=format&fit=crop&q=80'}
+                              alt={b.workerName}
+                              className="w-7 h-7 rounded-full object-cover border border-surface-variant/40 shrink-0"
+                            />
+                            <div className="text-xs">
+                              <span className="font-bold text-on-surface block">
+                                {b.workerName}
+                              </span>
+                              <span className="text-[10px] text-emerald-800 font-bold block">
+                                {b.workerTrade}
+                              </span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
                     </div>
+
+                    {/* Pricing Box */}
                     <div className="text-right shrink-0">
-                      <span className="text-lg font-black text-primary block">₹{b.totalEscrow}</span>
-                      <span className="text-[10px] text-secondary font-bold">0% fee cut</span>
+                      <div className="text-2xl font-black text-primary tracking-tight">
+                        ₹{b.labourAmount || b.totalEscrow}
+                      </div>
+                      <span className="inline-block text-[10px] font-black uppercase text-emerald-800 bg-emerald-50 px-2 py-0.5 rounded-md border border-emerald-200 mt-0.5">
+                        {isHindi ? '0% कमीशन कट' : '0% Fee Cut'}
+                      </span>
                     </div>
                   </div>
 
-                  {/* Address */}
-                  <div className="flex items-center gap-1.5 text-xs text-on-surface-variant px-1">
+                  {/* Location Pin */}
+                  <div className="flex items-center gap-1.5 text-xs text-on-surface-variant pt-1">
                     <span className="material-symbols-outlined text-primary text-[16px] shrink-0">
                       location_on
                     </span>
-                    <span className="truncate font-medium">{b.address}</span>
+                    <span className="truncate">{b.address}</span>
                   </div>
+
+                  {/* Customer Review Quote (if completed) */}
+                  {b.feedback && (
+                    <div className="bg-surface-container-low p-2.5 rounded-xl border border-surface-variant/30 text-xs text-on-surface-variant italic flex items-start gap-1.5">
+                      <span className="material-symbols-outlined text-[15px] text-amber-500 shrink-0">
+                        star
+                      </span>
+                      <span>"{b.feedback}"</span>
+                    </div>
+                  )}
                 </div>
 
-                {/* Worker View: Payout status instruction / Customer View: Secret PIN */}
-                {isLocked && !isWorker && (
-                  <div className="bg-primary/5 p-3.5 rounded-xl border border-primary/20 flex flex-col gap-2.5">
-                    <div className="flex items-center justify-between">
+                {/* Status-Specific Interactive Action Strip */}
+
+                {/* 1. If Escrow Locked (Active Job) */}
+                {isLocked && (
+                  <div className="bg-amber-500/10 p-3.5 sm:p-4 rounded-2xl border border-amber-500/30 flex flex-col gap-3">
+                    {!isWorker ? (
+                      // Customer Active Job View
+                      <>
+                        {/* Live GPS Track Button */}
+                        <button
+                          type="button"
+                          onClick={() => openLiveTracking(b)}
+                          className="w-full h-11 bg-slate-950 hover:bg-slate-900 text-white rounded-xl font-bold text-xs flex items-center justify-between px-3.5 shadow-xs active:scale-95 transition-all border border-slate-700 group"
+                        >
+                          <div className="flex items-center gap-2">
+                            <span className="flex h-2.5 w-2.5 relative">
+                              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                              <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-emerald-500"></span>
+                            </span>
+                            <span className="text-amber-300 font-extrabold">{isHindi ? 'लाइव जीपीएस रूट' : 'LIVE GPS ROUTE'}</span>
+                            <span className="text-slate-300 font-normal">| {isHindi ? 'आगमन ~11 मिनट' : 'ETA ~11 mins'}</span>
+                          </div>
+                          <div className="flex items-center gap-1 text-white group-hover:translate-x-1 transition-transform">
+                            <span>{isHindi ? 'नक्शा खोलें' : 'Open Map'}</span>
+                            <span className="material-symbols-outlined text-[16px]">arrow_forward</span>
+                          </div>
+                        </button>
+
+                        {/* PIN Strip */}
+                        <div className="flex items-center justify-between pt-1 border-t border-amber-500/20">
+                          <div>
+                            <span className="text-[10px] font-black uppercase text-amber-950 block">
+                              {isHindi ? '4-अंकीय गुप्त एस्क्रो रिलीज पिन' : '4-Digit Escrow Release PIN'}
+                            </span>
+                            <span className="text-xs text-amber-900/90">
+                              {isHindi ? 'काम पूरा होने व संतुष्ट होने के बाद ही तकनीशियन को दें।' : 'Share with technician only after service is completed.'}
+                            </span>
+                          </div>
+                          <span className="text-xl font-black text-amber-950 tracking-widest bg-white px-3.5 py-1 rounded-xl border border-amber-400 shadow-2xs font-mono">
+                            {b.releaseOtp}
+                          </span>
+                        </div>
+
+                        {/* Customer Actions */}
+                        <div className="flex items-center gap-2 pt-1">
+                          <button
+                            type="button"
+                            onClick={() => {
+                              releaseEscrow(b.id);
+                              soundEffects.playCashPayoutChime();
+                            }}
+                            className="flex-1 h-10 bg-primary hover:bg-primary-container text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">verified</span>
+                            <span>{isHindi ? 'भुगतान रिलीज करें (डेमो)' : 'Release Payment (Simulate)'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setDisputeModalBooking(b)}
+                            className="px-3.5 h-10 bg-error/10 hover:bg-error/20 text-error rounded-xl font-bold text-xs border border-error/20 flex items-center justify-center gap-1 active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">gavel</span>
+                            <span>{isHindi ? 'विवाद' : 'Dispute'}</span>
+                          </button>
+                        </div>
+
+                        {/* Secondary Customer Action: Cancel & 100% Escrow Refund */}
+                        <div className="pt-1 border-t border-amber-500/20 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => setCancelModalBooking(b)}
+                            className="w-full py-2.5 px-3 rounded-xl bg-red-50 hover:bg-red-100 border border-red-200 font-bold text-red-700 flex items-center justify-center gap-1.5 text-xs transition-colors active:scale-95 shadow-2xs"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">cancel</span>
+                            <span>{isHindi ? 'बुकिंग रद्द करें व 100% तुरंत रिफंड' : 'Cancel Booking & Instant 100% Refund'}</span>
+                          </button>
+                        </div>
+                      </>
+                    ) : (
+                      // Worker Active Job View (Direct PIN Verification Input & Audio Feedback!)
+                      <div className="flex flex-col gap-3">
+                        <div className="flex items-center justify-between text-xs text-amber-950 font-bold">
+                          <span className="flex items-center gap-1.5">
+                            <span className="material-symbols-outlined text-[18px] text-amber-700 shrink-0">
+                              lock_clock
+                            </span>
+                            <span>
+                              {isHindi ? `₹${b.labourAmount} आरबीआई एस्क्रो तिजोरी में सुरक्षित` : `₹${b.labourAmount} in RBI Escrow Vault`}
+                            </span>
+                          </span>
+                          <span className="text-[11px] text-amber-900 bg-amber-200/60 px-2 py-0.5 rounded-md">
+                            {isHindi ? 'ग्राहक से 4-अंक पिन मांगें' : 'Ask customer for PIN'}
+                          </span>
+                        </div>
+
+                        {/* In-Card PIN Claim Bar */}
+                        <div className="flex items-center gap-2">
+                          <input
+                            type="text"
+                            maxLength={4}
+                            placeholder={isHindi ? "4-अंक पिन दर्ज करें" : "Enter 4-Digit PIN"}
+                            value={pinInputs[b.id] || ''}
+                            onChange={(e) =>
+                              setPinInputs((prev) => ({
+                                ...prev,
+                                [b.id]: e.target.value.replace(/\D/g, ''),
+                              }))
+                            }
+                            className="w-36 h-10 px-3 text-center tracking-widest font-mono font-black text-sm bg-white rounded-xl border border-amber-300 focus:outline-none focus:ring-2 focus:ring-amber-500 text-on-surface placeholder:text-outline/60"
+                          />
+                          <button
+                            type="button"
+                            onClick={() => handleWorkerPinClaim(b.id, b.releaseOtp)}
+                            className="flex-1 h-10 bg-emerald-700 hover:bg-emerald-800 text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[16px]">verified</span>
+                            <span>{isHindi ? `दावा करें ₹${b.labourAmount}` : `Claim ₹${b.labourAmount}`}</span>
+                          </button>
+                        </div>
+
+                        {/* Feedback message if PIN entered */}
+                        {pinFeedback[b.id] && (
+                          <div
+                            className={`text-xs p-2 rounded-xl font-bold ${
+                              pinFeedback[b.id].type === 'success'
+                                ? 'bg-emerald-100 text-emerald-900'
+                                : 'bg-rose-100 text-rose-900'
+                            }`}
+                          >
+                            {pinFeedback[b.id].text}
+                          </div>
+                        )}
+
+                        {/* Worker Action Buttons */}
+                        <div className="grid grid-cols-2 gap-2 pt-1 border-t border-amber-500/20 text-xs">
+                          <button
+                            type="button"
+                            onClick={() => openLiveTracking(b)}
+                            className="py-2 px-2.5 rounded-xl bg-slate-900 text-white hover:bg-slate-800 font-bold flex items-center justify-center gap-1 text-[11px] active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-amber-300">navigation</span>
+                            <span>{isHindi ? 'रूट जीपीएस देखें' : 'Open Route GPS'}</span>
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => setReassignModalBooking(b)}
+                            className="py-2 px-2.5 rounded-xl bg-white hover:bg-amber-100/60 border border-amber-300 font-bold text-amber-950 flex items-center justify-center gap-1 text-[11px] active:scale-95 transition-all"
+                          >
+                            <span className="material-symbols-outlined text-[15px] text-amber-800">swap_horiz</span>
+                            <span>{isHindi ? 'सहयोगी को सौंपें' : 'Handover to Peer'}</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
+
+                {/* 2. If Released / Completed */}
+                {isReleased && (
+                  <div className="pt-3 border-t border-surface-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2 text-emerald-900 font-bold">
+                      <span className="w-6 h-6 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[16px]">check</span>
+                      </span>
                       <div>
-                        <span className="text-[10px] font-black uppercase text-primary block">
-                          4-Digit Escrow Release PIN
+                        <span className="block text-on-surface font-extrabold">
+                          {isHindi ? `₹${b.labourAmount} 100% मेहनताना बैंक में क्रेडिट` : `₹${b.labourAmount} 100% Remuneration Credited`}
                         </span>
-                        <span className="text-xs text-on-surface-variant">
-                          Share with technician only after service is completed.
+                        <span className="text-[11px] text-emerald-700 font-mono">
+                          {b.settlementRef || (isHindi ? 'सीधा बैंक सेटलमेंट (UTR #CB-994102)' : 'Direct Bank Settlement (UTR #CB-994102)')}
                         </span>
                       </div>
-                      <span className="text-xl font-black text-primary tracking-widest bg-white px-3 py-1 rounded-xl border border-primary/20 shadow-2xs">
-                        {b.releaseOtp}
-                      </span>
                     </div>
 
-                    <div className="flex items-center gap-2 pt-1">
-                      <button
-                        type="button"
-                        onClick={() => releaseEscrow(b.id)}
-                        className="flex-1 h-10 bg-primary hover:bg-primary-container text-white rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 shadow-xs active:scale-95 transition-all"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">verified</span>
-                        <span>Release Payment (Simulate)</span>
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => setDisputeModalBooking(b)}
-                        className="px-3.5 h-10 bg-error/10 hover:bg-error/20 text-error rounded-xl font-bold text-xs border border-error/20 flex items-center justify-center gap-1 active:scale-95 transition-all"
-                      >
-                        <span className="material-symbols-outlined text-[16px]">gavel</span>
-                        <span>Dispute</span>
-                      </button>
-                    </div>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInvoiceModalBooking(b);
+                        soundEffects.playSuccessChime();
+                      }}
+                      className="px-4 py-2 bg-surface-container-low hover:bg-surface-container border border-surface-variant/40 rounded-xl text-xs font-bold text-primary flex items-center justify-center gap-1.5 active:scale-95 transition-all shadow-2xs self-start sm:self-auto"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">receipt_long</span>
+                      <span>{isHindi ? 'टैक्स-फ्री रसीद देखें' : 'View Tax-Free Invoice'}</span>
+                    </button>
                   </div>
                 )}
 
-                {isLocked && isWorker && (
-                  <div className="bg-amber-50 p-3 rounded-xl border border-amber-200 flex items-center justify-between text-xs text-amber-900">
-                    <span className="font-bold flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px] text-amber-700">lock_clock</span>
-                      <span>₹{b.labourAmount} locked in Escrow. Collect 4-digit PIN from customer after work.</span>
-                    </span>
-                  </div>
-                )}
-
-                {isDisputed && (
-                  <div className="bg-error-container/30 p-3 rounded-xl border border-error/30 text-xs text-on-error-container flex flex-col gap-1">
-                    <span className="font-bold flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[16px]">lock_clock</span>
-                      Dispute Active: {b.disputeReason}
-                    </span>
-                    <span className="text-xs opacity-90">
-                      Funds are frozen in RBI Escrow. Chapter Admin is reviewing this case.
-                    </span>
-                  </div>
-                )}
-
+                {/* 3. If Refunded */}
                 {isRefunded && (
-                  <div className="bg-blue-50 border border-blue-200 p-3 rounded-xl flex items-center justify-between text-blue-900 text-xs">
-                    <span className="font-bold flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[17px]">currency_exchange</span>
-                      <span>₹{b.totalEscrow} refunded to original payment channel</span>
-                    </span>
-                    <span className="font-bold bg-white px-2 py-0.5 rounded text-[10px]">Refunded</span>
+                  <div className="pt-3 border-t border-surface-variant/30 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
+                    <div className="flex items-center gap-2 text-blue-900 font-bold">
+                      <span className="w-6 h-6 rounded-full bg-blue-100 text-blue-800 flex items-center justify-center shrink-0">
+                        <span className="material-symbols-outlined text-[16px]">currency_exchange</span>
+                      </span>
+                      <div>
+                        <span className="block text-on-surface font-extrabold">
+                          {isHindi ? `₹${b.refundAmount || b.totalEscrow} 100% मूल यूपीआई में वापस` : `₹${b.refundAmount || b.totalEscrow} Refunded 100% to Source UPI`}
+                        </span>
+                        <span className="text-[11px] text-blue-700">
+                          {b.cancellationReason || (isHindi ? 'रवाना होने से पहले रद्द (0% पेनल्टी)' : 'Cancelled before dispatch (0% penalty)')}
+                        </span>
+                      </div>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setInvoiceModalBooking(b);
+                        soundEffects.playSuccessChime();
+                      }}
+                      className="px-3.5 py-1.5 bg-blue-50 hover:bg-blue-100 border border-blue-200 rounded-xl text-xs font-bold text-blue-900 flex items-center gap-1 transition-all self-start sm:self-auto"
+                    >
+                      <span className="material-symbols-outlined text-[15px]">receipt_long</span>
+                      <span>{isHindi ? 'रिफंड रसीद' : 'Refund Receipt'}</span>
+                    </button>
                   </div>
                 )}
 
-                {b.status === 'released' && (
-                  <div className="bg-secondary-container/30 p-3 rounded-xl border border-secondary/20 flex items-center justify-between text-secondary text-xs">
-                    <span className="font-bold flex items-center gap-1.5">
-                      <span className="material-symbols-outlined text-[17px]">task_alt</span>
-                      <span>₹{b.labourAmount} directly paid to technician bank account</span>
-                    </span>
-                    <span className="font-bold bg-white px-2.5 py-0.5 rounded-md text-xs text-primary">Paid</span>
+                {/* 4. If Disputed */}
+                {isDisputed && (
+                  <div className="p-3.5 bg-rose-50 rounded-2xl border border-rose-200 text-xs text-rose-950 space-y-1.5">
+                    <div className="font-bold flex items-center gap-1.5 text-rose-900">
+                      <span className="material-symbols-outlined text-[18px]">gavel</span>
+                      <span>{isHindi ? `सहकारी मध्यस्थता सक्रिय: ${b.disputeReason}` : `Cooperative Mediation Active: ${b.disputeReason}`}</span>
+                    </div>
+                    <p className="text-[11px] text-rose-800 leading-relaxed">
+                      {isHindi
+                        ? 'एस्क्रो राशि सहकारी तिजोरी में सुरक्षित रूप से फ्रीज है। जिला चैप्टर रजिस्ट्रार 24 घंटे में समाधान जारी करेंगे।'
+                        : 'Escrow funds safely frozen in cooperative vault. District Chapter Registrar is reviewing resolution within 24 hours.'}
+                    </p>
                   </div>
                 )}
               </article>

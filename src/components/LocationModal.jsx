@@ -4,6 +4,7 @@ import { useApp } from '../context/AppContext';
 export const LocationModal = () => {
   const {
     t,
+    language,
     locationModalOpen,
     setLocationModalOpen,
     selectedCity,
@@ -11,6 +12,8 @@ export const LocationModal = () => {
     updateLocation,
     supportedCities,
   } = useApp();
+
+  const isHindi = language === 'hi';
 
   const [tempCity, setTempCity] = useState(selectedCity || 'sultanpur');
   const [tempLocality, setTempLocality] = useState(selectedLocality || 'Civil Lines, Golaghat');
@@ -62,7 +65,7 @@ export const LocationModal = () => {
       setTempCity('sultanpur');
       setTempLocality('Civil Lines, Golaghat');
       setCustomLocalityInput('Civil Lines, Sultanpur (GPS Locked)');
-      setGpsSuccessMessage('GPS Locked: Civil Lines, Sultanpur (Ward 8, UP)');
+      setGpsSuccessMessage(isHindi ? 'जीपीएस लॉक: सिविल लाइन्स, सुल्तानपुर (वार्ड 8)' : 'GPS Locked: Civil Lines, Sultanpur (Ward 8, UP)');
     }, 600);
   };
 
@@ -91,10 +94,10 @@ export const LocationModal = () => {
             </div>
             <div>
               <h3 id="locationModalTitle" className="font-title-lg text-title-lg font-bold text-on-surface">
-                {t('selectLocation') || 'अपनी लोकेशन चुनें'}
+                {t('selectLocation') || (isHindi ? 'अपनी लोकेशन चुनें' : 'Select Location')}
               </h3>
               <p className="font-label-sm text-label-sm text-on-surface-variant">
-                {t('switchCityNotice') || 'सत्यापित स्थानीय सहकारी कामगारों से जुड़ने के लिए अपना शहर चुनें'}
+                {t('switchCityNotice') || (isHindi ? 'सत्यापित स्थानीय सहकारी कामगारों से जुड़ने के लिए अपना शहर चुनें' : 'Switching city loads verified cooperative workers for that region.')}
               </p>
             </div>
           </div>
@@ -127,12 +130,12 @@ export const LocationModal = () => {
                 </span>
                 <span className="text-xs sm:text-sm truncate">
                   {isDetectingGps
-                    ? 'जीपीएस लोकेशन ट्रैक हो रही है...'
-                    : t('detectLocation') || 'मेरी लोकेशन उपयोग करें (GPS)'}
+                    ? (isHindi ? 'जीपीएस लोकेशन ट्रैक हो रही है...' : 'Detecting GPS location...')
+                    : (t('detectLocation') || (isHindi ? 'मेरी लोकेशन उपयोग करें (GPS)' : 'Use My Current Location (GPS)'))}
                 </span>
               </div>
               <span className="text-[10px] sm:text-[11px] bg-white/80 px-2 py-0.5 rounded-md font-bold text-secondary shrink-0 ml-1">
-                Auto Detect
+                {isHindi ? 'ऑटो डिटेक्ट' : 'Auto Detect'}
               </span>
             </button>
 
@@ -150,10 +153,10 @@ export const LocationModal = () => {
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="font-label-md text-label-md font-bold text-on-surface">
-                {t('currentCity') || 'शहर चुनें / Select City'}
+                {isHindi ? 'शहर चुनें' : 'Select City'}
               </label>
               <span className="text-[11px] text-primary font-bold">
-                4 Active Cooperative Chapters
+                {isHindi ? '4 सक्रिय सहकारी चैप्टर' : '4 Active Cooperative Chapters'}
               </span>
             </div>
 
@@ -177,7 +180,7 @@ export const LocationModal = () => {
                         </span>
                         {city.id === 'sultanpur' && (
                           <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded-full font-black uppercase tracking-wider">
-                            You Are Here
+                            {isHindi ? 'आप यहाँ हैं' : 'You Are Here'}
                           </span>
                         )}
                       </div>
@@ -189,8 +192,8 @@ export const LocationModal = () => {
                     <div className="mt-2 pt-2 border-t border-surface-variant/20 flex items-center justify-between">
                       <span className="text-[10px] text-primary font-semibold">
                         {city.id === 'sultanpur' || city.id === 'bengaluru'
-                          ? '5 Workers'
-                          : '3 Workers'}
+                          ? (isHindi ? '5 कारीगर' : '5 Workers')
+                          : (isHindi ? '3 कारीगर' : '3 Workers')}
                       </span>
                       <span
                         className={`material-symbols-outlined text-[18px] ${
@@ -209,7 +212,7 @@ export const LocationModal = () => {
           {/* Popular Localities Chips for Selected City */}
           <div>
             <label className="block font-label-md text-label-md font-bold text-on-surface mb-2">
-              {t('popularLocalities') || 'प्रमुख इलाके / Popular Localities in'}{' '}
+              {isHindi ? 'प्रमुख इलाके - ' : 'Popular Localities in '}{' '}
               <span className="text-primary font-extrabold">{activeCityData.name}</span>
             </label>
 
@@ -233,7 +236,7 @@ export const LocationModal = () => {
                     <span className="material-symbols-outlined text-[13px]">
                       {area === 'All' ? 'grid_view' : 'near_me'}
                     </span>
-                    <span>{area}</span>
+                    <span>{area === 'All' ? (isHindi ? 'सभी' : 'All') : area}</span>
                   </button>
                 );
               })}
@@ -243,7 +246,7 @@ export const LocationModal = () => {
           {/* Custom Address Input */}
           <div>
             <label className="block font-label-md text-label-md font-bold text-on-surface mb-1.5">
-              {t('customAddressPlaceholder') || 'गली, मोहल्ला या लैंडमार्क (Custom Street/Landmark)'}
+              {isHindi ? 'गली, मोहल्ला या लैंडमार्क' : 'Custom Street / Landmark'}
             </label>
             <div className="relative">
               <span className="material-symbols-outlined absolute left-3 top-2.5 text-[18px] text-outline">
@@ -285,7 +288,7 @@ export const LocationModal = () => {
             onClick={() => setLocationModalOpen(false)}
             className="px-4 py-2 text-xs font-bold text-on-surface-variant hover:text-on-surface rounded-lg transition-colors"
           >
-            रद्द करें / Cancel
+            {isHindi ? 'रद्द करें' : 'Cancel'}
           </button>
           <button
             type="button"
@@ -293,7 +296,7 @@ export const LocationModal = () => {
             className="px-5 py-2.5 bg-primary hover:bg-primary-container active:scale-95 text-on-primary rounded-xl text-xs font-black transition-all shadow-xs flex items-center gap-1.5"
           >
             <span className="material-symbols-outlined text-[16px]">check</span>
-            <span>{t('confirmLocation') || 'लोकेशन सेट करें (Confirm)'}</span>
+            <span>{isHindi ? 'लोकेशन सेट करें' : 'Confirm & Set Location'}</span>
           </button>
         </div>
       </div>

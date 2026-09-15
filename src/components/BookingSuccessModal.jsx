@@ -2,9 +2,20 @@ import React from 'react';
 import { useApp } from '../context/AppContext';
 
 export const BookingSuccessModal = () => {
-  const { successBookingModal, setSuccessBookingModal, navigateTo } = useApp();
+  const { successBookingModal, setSuccessBookingModal, navigateTo, openLiveTracking } = useApp();
 
   if (!successBookingModal) return null;
+
+  const handleTrackLive = () => {
+    const booking = successBookingModal;
+    setSuccessBookingModal(null);
+    openLiveTracking(booking);
+  };
+
+  const handleViewBookings = () => {
+    setSuccessBookingModal(null);
+    navigateTo('bookings');
+  };
 
   return (
     <div className="fixed inset-0 z-50 bg-black/60 backdrop-blur-xs flex items-center justify-center p-4 animate-fade-in">
@@ -48,17 +59,28 @@ export const BookingSuccessModal = () => {
           <span>100% Refundable if technician doesn't show up.</span>
         </div>
 
-        <button
-          type="button"
-          onClick={() => {
-            setSuccessBookingModal(null);
-            navigateTo('bookings');
-          }}
-          className="w-full h-12 rounded-lg bg-primary text-on-primary font-title-md text-title-md font-bold flex items-center justify-center gap-2 shadow-sm active:bg-primary-container"
-        >
-          <span>View Booking Timeline</span>
-          <span className="material-symbols-outlined text-[20px]">arrow_forward</span>
-        </button>
+        {/* Action Buttons */}
+        <div className="flex flex-col gap-2">
+          <button
+            type="button"
+            onClick={handleTrackLive}
+            className="w-full h-12 rounded-xl bg-primary hover:bg-primary-container text-on-primary font-bold text-sm flex items-center justify-center gap-2 shadow-md active:scale-95 transition-all"
+          >
+            <span className="material-symbols-outlined text-[20px] text-amber-300 material-symbols-fill">
+              location_on
+            </span>
+            <span>Live Track Technician (Map)</span>
+            <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
+          </button>
+
+          <button
+            type="button"
+            onClick={handleViewBookings}
+            className="w-full h-10 rounded-xl bg-surface-container-low hover:bg-surface-container text-on-surface font-semibold text-xs flex items-center justify-center border border-surface-variant/40 active:scale-95 transition-all"
+          >
+            View My Bookings & Timeline
+          </button>
+        </div>
       </div>
     </div>
   );

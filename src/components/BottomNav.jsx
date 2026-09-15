@@ -45,15 +45,13 @@ export const BottomNav = () => {
             <button
               key={tab.id}
               onClick={() => navigateTo(tab.id)}
-              className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 transition-all active:scale-90 select-none ${
-                isActive ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
-              }`}
+              className={`flex flex-col items-center justify-center flex-1 min-w-0 px-0.5 py-1 transition-all active:scale-90 select-none ${isActive ? 'text-primary' : 'text-on-surface-variant hover:text-on-surface'
+                }`}
             >
               <div className="relative flex items-center justify-center">
                 <span
-                  className={`material-symbols-outlined text-[23px] transition-transform ${
-                    isActive ? 'scale-110 material-symbols-fill text-primary' : 'text-outline'
-                  }`}
+                  className={`material-symbols-outlined text-[23px] transition-transform ${isActive ? 'scale-110 material-symbols-fill text-primary' : 'text-outline'
+                    }`}
                 >
                   {tab.icon}
                 </span>
@@ -64,9 +62,8 @@ export const BottomNav = () => {
                 ) : null}
               </div>
               <span
-                className={`text-[10px] sm:text-[11px] mt-0.5 tracking-tight truncate max-w-[62px] sm:max-w-[74px] text-center leading-tight ${
-                  isActive ? 'font-extrabold text-primary' : 'font-semibold text-on-surface-variant'
-                }`}
+                className={`text-[10px] sm:text-[11px] mt-0.5 tracking-tight truncate max-w-[62px] sm:max-w-[74px] text-center leading-tight ${isActive ? 'font-extrabold text-primary' : 'font-semibold text-on-surface-variant'
+                  }`}
               >
                 {tab.label}
               </span>

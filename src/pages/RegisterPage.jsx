@@ -9,7 +9,11 @@ export const RegisterPage = () => {
     activeCityConfig,
     selectedLocality,
     switchRole,
+    language,
+    t,
   } = useApp();
+
+  const isHindi = language === 'hi';
 
   // Role: 'customer' | 'worker'
   const [role, setRole] = useState('worker');
@@ -228,9 +232,13 @@ export const RegisterPage = () => {
                   <span className="material-symbols-outlined text-amber-600 text-[20px]">check_circle</span>
                 )}
               </div>
-              <span className="text-xs font-black text-amber-950 mt-1">Worker-Owner (कारीगर)</span>
+              <span className="text-xs font-black text-amber-950 mt-1">
+                {isHindi ? 'कारीगर (श्रमिक-मालिक)' : 'Worker-Owner'}
+              </span>
               <span className="text-[11px] text-on-surface-variant leading-tight">
-                Keep 100% labour earnings, practical skill verification & co-op shares.
+                {isHindi
+                  ? '100% मेहनताना अपने पास रखें, प्रैक्टिकल स्किल सत्यापन और सहकारी हिस्सेदारी।'
+                  : 'Keep 100% labour earnings, practical skill verification & co-op shares.'}
               </span>
             </button>
           </div>
@@ -248,12 +256,12 @@ export const RegisterPage = () => {
           <div className="flex items-center gap-2 p-2 bg-emerald-50 rounded-xl border border-emerald-200">
             <span className="material-symbols-outlined text-emerald-600 text-[18px]">verified_user</span>
             <span className="text-xs font-bold text-emerald-950">
-              Customer Instant Setup • Instant Escrow Safety
+              {isHindi ? 'ग्राहक त्वरित पंजीकरण • सुरक्षित एस्क्रो' : 'Customer Instant Setup • Instant Escrow Safety'}
             </span>
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-on-surface">Full Name</label>
+            <label className="text-xs font-bold text-on-surface">{isHindi ? 'पूरा नाम' : 'Full Name'}</label>
             <input
               type="text"
               required
@@ -264,7 +272,9 @@ export const RegisterPage = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-on-surface">Mobile Phone (OTP Verification)</label>
+            <label className="text-xs font-bold text-on-surface">
+              {isHindi ? 'मोबाइल नंबर (ओटीपी सत्यापन)' : 'Mobile Phone (OTP Verification)'}
+            </label>
             <div className="flex items-stretch gap-2">
               <span className="px-3 bg-surface-container-low rounded-xl text-on-surface font-bold text-xs flex items-center border border-surface-variant/40">
                 +91
@@ -280,7 +290,9 @@ export const RegisterPage = () => {
           </div>
 
           <div className="flex flex-col gap-1">
-            <label className="text-xs font-bold text-on-surface">Residential Area / Locality</label>
+            <label className="text-xs font-bold text-on-surface">
+              {isHindi ? 'रहने का क्षेत्र / इलाका' : 'Residential Area / Locality'}
+            </label>
             <input
               type="text"
               value={customerLocality}
@@ -293,7 +305,7 @@ export const RegisterPage = () => {
             type="submit"
             className="w-full h-11 rounded-xl bg-emerald-600 hover:bg-emerald-700 active:scale-[0.99] text-white font-bold text-xs shadow-sm flex items-center justify-center gap-1.5 transition-all mt-1"
           >
-            <span>Complete Registration & Enter SAHYOG</span>
+            <span>{isHindi ? 'पंजीकरण पूरा करें और SAHYOG में प्रवेश करें' : 'Complete Registration & Enter SAHYOG'}</span>
             <span className="material-symbols-outlined text-[18px]">arrow_forward</span>
           </button>
         </form>
@@ -307,15 +319,19 @@ export const RegisterPage = () => {
           <div className="flex items-center gap-2 p-2.5 bg-amber-50 rounded-xl border border-amber-200">
             <span className="material-symbols-outlined text-amber-700 text-[20px]">engineering</span>
             <div>
-              <h3 className="text-xs font-black text-amber-950">Stage 1: Trade Guild & Workshop Identity</h3>
-              <p className="text-[10px] text-amber-900/80">Tell us about your trade and local service experience.</p>
+              <h3 className="text-xs font-black text-amber-950">
+                {isHindi ? 'चरण 1: ट्रेड गिल्ड व कार्यशाला पहचान' : 'Stage 1: Trade Guild & Workshop Identity'}
+              </h3>
+              <p className="text-[10px] text-amber-900/80">
+                {isHindi ? 'अपने पेशे और स्थानीय अनुभव के बारे में बताएं।' : 'Tell us about your trade and local service experience.'}
+              </p>
             </div>
           </div>
 
           {/* Full Name */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-on-surface">
-              Full Name (कारीगर का नाम) <span className="text-red-500">*</span>
+              {isHindi ? 'पूरा नाम (कारीगर का नाम)' : 'Full Name'} <span className="text-red-500">*</span>
             </label>
             <input
               type="text"
@@ -330,7 +346,7 @@ export const RegisterPage = () => {
           {/* Mobile */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-on-surface">
-              Mobile Number (10-Digit) <span className="text-red-500">*</span>
+              {isHindi ? 'मोबाइल नंबर (10-अंक)' : 'Mobile Number (10-Digit)'} <span className="text-red-500">*</span>
             </label>
             <div className="flex items-stretch gap-2">
               <span className="px-3 bg-surface-container-low rounded-xl text-on-surface font-bold text-xs flex items-center border border-surface-variant/40">
@@ -349,7 +365,7 @@ export const RegisterPage = () => {
           {/* Primary Guild Selector */}
           <div className="flex flex-col gap-1">
             <label className="text-xs font-bold text-on-surface">
-              Primary Trade Guild (पेशा / व्यवसाय) <span className="text-red-500">*</span>
+              {isHindi ? 'मुख्य पेशा / व्यवसाय' : 'Primary Trade Guild'} <span className="text-red-500">*</span>
             </label>
             <select
               value={tradeCategory}
@@ -374,11 +390,11 @@ export const RegisterPage = () => {
               }}
               className="h-11 px-3.5 rounded-xl bg-surface-container-low text-on-surface font-bold text-xs border border-surface-variant/40 focus:outline-none focus:ring-2 focus:ring-primary"
             >
-              <option value="electrical">⚡ Electrical & Inverter Wiring (विद्युत कर्मी)</option>
-              <option value="plumbing">🚰 Plumbing & Motor Specialist (प्लंबर)</option>
-              <option value="carpentry">🪚 Carpentry & Woodcraft (बढ़ई)</option>
-              <option value="cleaning">🧹 Residential Deep Cleaning (सफाई)</option>
-              <option value="appliance">❄️ AC & Appliance Maintenance (एसी मरम्मत)</option>
+              <option value="electrical">{isHindi ? '⚡ विद्युत व इन्वर्टर वायरिंग' : '⚡ Electrical & Inverter Wiring'}</option>
+              <option value="plumbing">{isHindi ? '🚰 प्लंबिंग व मोटर स्पेशलिस्ट' : '🚰 Plumbing & Motor Specialist'}</option>
+              <option value="carpentry">{isHindi ? '🪚 बढ़ई काम व वुडक्राफ्ट' : '🪚 Carpentry & Woodcraft'}</option>
+              <option value="cleaning">{isHindi ? '🧹 डीप क्लीनिंग व सफाई' : '🧹 Residential Deep Cleaning'}</option>
+              <option value="appliance">{isHindi ? '❄️ एसी व उपकरण मरम्मत' : '❄️ AC & Appliance Maintenance'}</option>
             </select>
           </div>
 
@@ -606,7 +622,7 @@ export const RegisterPage = () => {
           {/* 2 Peer Guarantors */}
           <div className="flex flex-col gap-1.5">
             <label className="text-xs font-bold text-on-surface">
-              2 Peer Worker Guarantors (सहयोगी कामगार गवाह)
+              {isHindi ? '2 सहयोगी कामगार गवाह (Peer Guarantors)' : '2 Peer Worker Guarantors'}
             </label>
             <div className="grid grid-cols-2 gap-2 text-[11px]">
               <div className="p-2.5 rounded-lg bg-surface-container border border-surface-variant/30 flex flex-col gap-0.5">
@@ -756,10 +772,10 @@ export const RegisterPage = () => {
               </span>
               <div>
                 <span className="text-xs font-black text-indigo-950 block">
-                  Jury / Evaluator Live Verification Step
+                  {isHindi ? 'निर्णायक मंडल / लाइव सत्यापन चरण' : 'Jury / Evaluator Live Verification Step'}
                 </span>
                 <span className="text-[10px] text-indigo-800 font-bold">
-                  स्विच करके लाइव अप्रूवल और वीडियो रिव्यू देखें
+                  {isHindi ? 'स्विच करके लाइव अप्रूवल और वीडियो रिव्यू देखें' : 'Switch to evaluate demo video and approve applicant live'}
                 </span>
               </div>
             </div>

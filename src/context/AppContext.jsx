@@ -8,6 +8,8 @@ import {
   RESOLUTIONS,
   SUPPORTED_CITIES,
   DEMO_USERS,
+  CITY_LIVE_ROUTES,
+  WHOLESALE_HARDWARE_CATALOG,
 } from '../data/hardcodedData';
 import { TRANSLATIONS } from '../i18n/translations';
 
@@ -169,9 +171,25 @@ export const AppProvider = ({ children }) => {
 
   // Bookings list (with localStorage fallback)
   const [bookings, setBookings] = useState(() => {
-    const saved = localStorage.getItem('sahyog_bookings');
-    return saved ? JSON.parse(saved) : INITIAL_BOOKINGS;
+    const saved = localStorage.getItem('sahyog_bookings_v2');
+    if (saved) {
+      try {
+        return JSON.parse(saved);
+      } catch (e) {
+        console.error('Error parsing saved bookings', e);
+      }
+    }
+    return INITIAL_BOOKINGS;
   });
+
+  useEffect(() => {
+    localStorage.setItem('sahyog_bookings_v2', JSON.stringify(bookings));
+  }, [bookings]);
+
+  const resetBookingsToSample = () => {
+    setBookings(INITIAL_BOOKINGS);
+    localStorage.setItem('sahyog_bookings_v2', JSON.stringify(INITIAL_BOOKINGS));
+  };
 
   // Active negotiation thread
   const [negotiationThread, setNegotiationThread] = useState(() => {
@@ -193,6 +211,20 @@ export const AppProvider = ({ children }) => {
   const [auditReportModalOpen, setAuditReportModalOpen] = useState(false);
   const [invoiceModalBooking, setInvoiceModalBooking] = useState(null);
   const [skillAssessmentModalWorker, setSkillAssessmentModalWorker] = useState(null);
+  const [cancelModalBooking, setCancelModalBooking] = useState(null);
+  const [reassignModalBooking, setReassignModalBooking] = useState(null);
+  const [liveTrackingModalOpen, setLiveTrackingModalOpen] = useState(false);
+  const [liveTrackingBooking, setLiveTrackingBooking] = useState(() => INITIAL_BOOKINGS[0] || null);
+
+  const openLiveTracking = (booking = null) => {
+    const targetBooking = booking || bookings.find((b) => b.status === 'escrow_locked') || bookings[0] || INITIAL_BOOKINGS[0];
+    setLiveTrackingBooking(targetBooking);
+    setLiveTrackingModalOpen(true);
+  };
+
+  const closeLiveTracking = () => {
+    setLiveTrackingModalOpen(false);
+  };
 
   // --- WORKER DASHBOARD STATE ---
   const [workerOnDuty, setWorkerOnDuty] = useState(true);
@@ -302,6 +334,70 @@ export const AppProvider = ({ children }) => {
             status: resolutionType === 'refund_customer' ? 'refunded' : 'released',
             disputeResolution: resolutionType,
           };
+        }
+        return b;
+      })
+    );
+  };
+
+  // --- CUSTOMER CANCELLATION & INSTANT 100% ESCROW REFUND ---
+  const cancelBooking = (bookingId, reason = 'Customer request', cancelFee = 0) => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          const refundAmount = Math.max(0, b.totalEscrow - cancelFee);
+          return {
+            ...b,
+            status: 'refunded',
+            cancellationReason: reason,
+            cancelFee,
+            refundAmount,
+            timeline: [
+              ...b.timeline,
+              {
+                step: 5,
+                title: cancelFee > 0
+                  ? `Cancelled (${reason}) • ₹${refundAmount} refunded, ₹${cancelFee} fuel allowance to worker`
+                  : `Booking Cancelled (${reason}) • ₹${refundAmount} 100% Instant Refund to UPI`,
+                status: 'completed',
+                time: 'Just now',
+              },
+            ],
+          };
+        }
+        return b;
+      })
+    );
+  };
+
+  // --- COOPERATIVE GUILD PEER REASSIGNMENT / JOB SWITCH ---
+  const reassignBooking = (bookingId, newWorker, handoverReason = 'Guild Peer Reassignment') => {
+    setBookings((prev) =>
+      prev.map((b) => {
+        if (b.id === bookingId) {
+          const updated = {
+            ...b,
+            workerId: newWorker.id,
+            workerName: newWorker.name,
+            workerTrade: `${newWorker.trade} • Co-Owner #${newWorker.memberId}`,
+            workerAvatar: newWorker.detailAvatar || newWorker.avatar,
+            workerPhone: newWorker.phone || '98765 43210',
+            reassignedFrom: b.workerName,
+            handoverReason,
+            timeline: [
+              ...b.timeline,
+              {
+                step: 2,
+                title: `Auto-reassigned to Guild Peer ${newWorker.name} (${handoverReason})`,
+                status: 'completed',
+                time: 'Just now',
+              },
+            ],
+          };
+          if (liveTrackingBooking?.id === bookingId) {
+            setLiveTrackingBooking(updated);
+          }
+          return updated;
         }
         return b;
       })
@@ -629,6 +725,15 @@ export const AppProvider = ({ children }) => {
     const bookingId = `SHG-${Math.floor(1000 + Math.random() * 9000)}`;
     const otp = `${Math.floor(1000 + Math.random() * 9000)}`;
 
+    const workerVehicle = worker.vehicle || {
+      type: 'Electric Scooter',
+      model: 'Hero Electric NYX',
+      regNumber: `UP-64-${String.fromCharCode(65 + Math.floor(Math.random() * 26))}${String.fromCharCode(65 + Math.floor(Math.random() * 26))}-${Math.floor(1000 + Math.random() * 9000)}`,
+      speedKmH: 28,
+      batteryPercent: 90,
+      helmetVerified: true,
+    };
+
     const newBooking = {
       id: bookingId,
       workerId: worker.id,
@@ -645,6 +750,18 @@ export const AppProvider = ({ children }) => {
       status: 'escrow_locked',
       releaseOtp: otp,
       paymentMethod,
+      city: selectedCity || 'sultanpur',
+      workerPhone: worker.phone || '98123 45678',
+      vehicle: workerVehicle,
+      liveTracking: {
+        active: true,
+        etaMins: 11,
+        distanceKm: 1.8,
+        speedKmH: workerVehicle.speedKmH || 28,
+        currentStep: 'en_route',
+        routeCity: selectedCity || 'sultanpur',
+        progressPercent: 15,
+      },
       bookingDate: new Date().toLocaleDateString('en-GB', {
         day: '2-digit',
         month: 'short',
@@ -652,13 +769,14 @@ export const AppProvider = ({ children }) => {
       }),
       timeline: [
         { step: 1, title: 'Escrow Deposit Held', status: 'completed', time: 'Just now' },
-        { step: 2, title: 'Technician Dispatched', status: 'completed', time: 'ETA 15m' },
+        { step: 2, title: 'Technician Dispatched (Live GPS En Route)', status: 'completed', time: 'ETA 11m' },
         { step: 3, title: 'Service in Progress', status: 'current', time: timeSlot },
         { step: 4, title: 'Release 4-Digit OTP', status: 'pending', time: 'After inspection' },
       ],
     };
 
     setBookings((prev) => [newBooking, ...prev]);
+    setLiveTrackingBooking(newBooking);
     setSuccessBookingModal(newBooking);
     return newBooking;
   };
@@ -737,6 +855,7 @@ export const AppProvider = ({ children }) => {
         demoUsers: DEMO_USERS,
         bookings,
         setBookings,
+        resetBookingsToSample,
         createBooking,
         releaseEscrow,
         negotiationThread,
@@ -765,6 +884,13 @@ export const AppProvider = ({ children }) => {
         setInvoiceModalBooking,
         skillAssessmentModalWorker,
         setSkillAssessmentModalWorker,
+        cancelModalBooking,
+        setCancelModalBooking,
+        reassignModalBooking,
+        setReassignModalBooking,
+        cancelBooking,
+        reassignBooking,
+        wholesaleCatalog: WHOLESALE_HARDWARE_CATALOG,
         // Disputes & Refunds
         raiseDispute,
         adminResolveDispute,
@@ -787,6 +913,14 @@ export const AppProvider = ({ children }) => {
         resolutionsList,
         setResolutionsList,
         publishResolution,
+        // Live Map Tracking
+        liveTrackingModalOpen,
+        setLiveTrackingModalOpen,
+        liveTrackingBooking,
+        setLiveTrackingBooking,
+        openLiveTracking,
+        closeLiveTracking,
+        cityLiveRoutes: CITY_LIVE_ROUTES,
         // Location State
         selectedCity,
         setSelectedCity,

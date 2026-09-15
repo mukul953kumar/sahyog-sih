@@ -12,6 +12,10 @@ import { DisputeModal } from './components/DisputeModal';
 import { AuditReportModal } from './components/AuditReportModal';
 import { SkillAssessmentModal } from './components/SkillAssessmentModal';
 import { LocationModal } from './components/LocationModal';
+import { LiveTrackingModal } from './components/LiveTrackingModal';
+import { InvoiceModal } from './components/InvoiceModal';
+import { CancelBookingModal } from './components/CancelBookingModal';
+import { ReassignWorkerModal } from './components/ReassignWorkerModal';
 
 import { HomePage } from './pages/HomePage';
 import { WorkersPage } from './pages/WorkersPage';
@@ -60,9 +64,9 @@ const AppContent = () => {
   };
 
   return (
-    <div className="bg-surface-container-lowest text-on-surface flex flex-col min-h-screen overflow-x-hidden">
+    <div className="bg-[#f4f7f5] text-on-surface flex flex-col min-h-screen overflow-x-hidden">
       <Header />
-      <main className={`flex-1 flex flex-col relative w-full pt-16 ${isAuthScreen ? 'pb-8' : 'pb-24 sm:pb-28'} bg-surface-container-lowest overflow-x-hidden`}>
+      <main className={`flex-1 flex flex-col relative w-full pt-16 ${isAuthScreen ? 'pb-8' : 'pb-24 sm:pb-28'} bg-[#f4f7f5] overflow-x-hidden`}>
         {renderCurrentView()}
       </main>
       {!isAuthScreen && <BottomNav />}
@@ -78,6 +82,10 @@ const AppContent = () => {
       <AuditReportModal />
       <SkillAssessmentModal />
       <LocationModal />
+      <LiveTrackingModal />
+      <InvoiceModal />
+      <CancelBookingModal />
+      <ReassignWorkerModal />
     </div>
   );
 };
